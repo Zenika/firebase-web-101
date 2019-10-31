@@ -1,0 +1,10 @@
+{
+  "name": "firebase-web-101",
+  "version": "1.0.0",
+  "description": "101 Firebase workshop for web apps.",
+  "main": "index.js",
+  "scripts": {
+    "start": ""
+  },
+  "license": "MIT"
+}
