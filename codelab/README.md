@@ -1,5 +1,3 @@
-# Firebase web 101 codelab
-
 The codelab instructions are built with the [Google Codelab tool named claat](https://github.com/googlecodelabs/tools).
 
 ## Install
