@@ -4,7 +4,7 @@
   "description": "101 Firebase workshop for web apps.",
   "main": "index.js",
   "scripts": {
-    "start": ""
+    "start": "npx serve src"
   },
   "license": "MIT"
 }
