@@ -1,5 +1,5 @@
 summary: Firebase Web 101
-id: codelab
+id: build
 categories: Sample
 tags: medium
 status: Published 
@@ -9,7 +9,7 @@ Feedback Link: https://zenika.com
 # Firebase Web 101
 <!-- ------------------------ -->
 ## Overview 
-Duration: 5
+Duration: 10
 
 ### What You’ll Learn 
 - how to set the amount of time each slide will take to finish 
@@ -20,7 +20,7 @@ Duration: 5
 
 <!-- ------------------------ -->
 ## Setting Duration
-Duration: 15
+Duration: 10
 
 To indicate how long each slide will take to go through, set the `Duration` under each Heading 2 (i.e. `##`) to an integer. 
 The integers refer to minutes. If you set `Duration: 4` then a particular slide will take 4 minutes to complete. 

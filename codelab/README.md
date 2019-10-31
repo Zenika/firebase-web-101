@@ -18,7 +18,7 @@ Now you can build the codelab static files:
 make build
 ```
 
-You can also serve the codelab on http://localhost:9090/codelab :
+You can also serve the codelab on http://localhost:9090 :
 ```
 make serve
 ```
