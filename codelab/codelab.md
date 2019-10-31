@@ -1,8 +1,5 @@
 summary: Firebase Web 101
 id: build
-categories: Sample
-tags: medium
-status: Published 
 authors: bpetetot
 Feedback Link: https://zenika.com
 
