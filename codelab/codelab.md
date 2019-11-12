@@ -5,38 +5,40 @@ Feedback Link: https://zenika.com
 
 # Firebase Web 101
 <!-- ------------------------ -->
-## Overview 
+## Overview
 Duration: 10
 
-### What You’ll Learn 
-- how to set the amount of time each slide will take to finish 
-- how to include code snippets 
-- how to hyperlink items 
-- how to include images 
-- other stuff
+### What You’ll Learn
+- how to create an application for firebase
+- how to host your application on firebase hosting
+- how to store and get data on firestore
+- how to build and deploy cloud function
+- how to add authentification on your application
+- how to upload and store files with cloud storage
+- how to use firebase extensions
 
 <!-- ------------------------ -->
 ## Setting Duration
 Duration: 10
 
-To indicate how long each slide will take to go through, set the `Duration` under each Heading 2 (i.e. `##`) to an integer. 
-The integers refer to minutes. If you set `Duration: 4` then a particular slide will take 4 minutes to complete. 
+To indicate how long each slide will take to go through, set the `Duration` under each Heading 2 (i.e. `##`) to an integer.
+The integers refer to minutes. If you set `Duration: 4` then a particular slide will take 4 minutes to complete.
 
-The total time will automatically be calculated for you and will be displayed on the codelab once you create it. 
+The total time will automatically be calculated for you and will be displayed on the codelab once you create it.
 
 <!-- ------------------------ -->
 ## Code Snippets
 Duration: 20
 
-To include code snippets you can do a few things. 
+To include code snippets you can do a few things.
 - Inline highlighting can be done using the tiny tick mark on your keyboard: "`"
 - Embedded code
 
 ### JavaScript
 
 ```javascript
-{ 
-  key1: "string", 
+{
+  key1: "string",
   key2: integer,
   key3: "string"
 }
