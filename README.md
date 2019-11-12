@@ -2,7 +2,7 @@
 
 ## Play the codelab
 
-Go to https://bpetetot.github.io/firebase-web-101
+Go to https://zenika.github.io/firebase-web-101
 
 ## Contribute to the codelab
 
