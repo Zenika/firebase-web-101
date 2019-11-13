@@ -1,7 +1,6 @@
-.PHONY: all install build build-ci serve
+.PHONY: all install build build-ci serve watch-serve watch check
 
 pwd = $(shell pwd)
-fswatchexist =
 
 check:
 	@echo $(shell which fswatch > /dev/null || echo install fswatch to use watch)
