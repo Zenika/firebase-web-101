@@ -1,0 +1,19 @@
+{
+  "environment": "web",
+  "format": "html",
+  "prefix": "https://storage.googleapis.com",
+  "mainga": "UA-49880327-14",
+  "updated": "2019-11-13T15:14:40Z",
+  "id": "build",
+  "duration": 90,
+  "title": "Firebase Web 101",
+  "authors": "bpetetot",
+  "summary": "Firebase Web 101",
+  "source": "codelab.md",
+  "theme": "",
+  "status": null,
+  "category": null,
+  "tags": [],
+  "feedback": "https://zenika.com",
+  "url": "build"
+}
