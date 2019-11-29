@@ -106,12 +106,8 @@
             >download the repository as a ZIP file</a
           >.
         </p>
-        <aside class="special">
-          <p>
-            The <code>friendlychat-web</code> repository contains sample
-            projects for multiple platforms.
-          </p>
-          <p>This codelab only uses these two repositories:</p>
+        <aside>
+          <p>This codelab contains these repositories:</p>
           <ul>
             <li>
               📁 <strong>web-start</strong>: The starting code that you&#39;ll
@@ -121,6 +117,9 @@
               📁 <strong>web</strong>: The complete code for the finished sample
               app.
             </li>
+            <li>
+              📁 <strong>docs</strong>: The webpage
+            </li>
           </ul>
           <p>
             <strong>Note</strong>: If you would like to run the finished app,
@@ -128,6 +127,11 @@
             console (see the
             <strong>Create a Firebase project and set up your app</strong>
             section of this codelab for instructions).
+          </p>
+        </aside>
+        <aside class="special">
+          <p>
+            This codelab repository is adapted from <a href="https://github.com/firebase/friendlychat-web">https://github.com/firebase/friendlychat-web</a>
           </p>
         </aside>
         <h3 is-upgraded>Import the starter app</h3>
@@ -1032,426 +1036,6 @@ function loadMessages() {
         </p>
       </google-codelab-step>
 
-      <google-codelab-step label="Send images" duration="10">
-        <p>We&#39;ll now add a feature that shares images.</p>
-        <p>
-          While the Cloud Firestore is good for storing structured data, Cloud
-          Storage is better suited for storing files.
-          <a href="https://firebase.google.com/docs/storage/" target="_blank"
-            >Cloud Storage for Firebase</a
-          >
-          is a file/blob storage service, and we&#39;ll use it to store any
-          images that a user shares using our app.
-        </p>
-        <h3 is-upgraded>Save images to Cloud Storage</h3>
-        <p>
-          For this codelab, we&#39;ve already added for you a button that
-          triggers a file picker dialog. After selecting a file, the
-          <code>saveImageMessage</code> function is called, and you can get a
-          reference to the selected file. The
-          <code>saveImageMessage</code> function accomplishes the following:
-        </p>
-        <ol type="1" start="1">
-          <li>
-            Creates a &#34;placeholder&#34; chat message in the chat feed, so
-            that users see a &#34;Loading&#34; animation while we upload the
-            image.
-          </li>
-          <li>
-            Uploads the image file to Cloud Storage to this path:
-            <code>/&lt;uid&gt;/&lt;messageId&gt;/&lt;file_name&gt;</code>
-          </li>
-          <li>Generates a publicly readable URL for the image file.</li>
-          <li>
-            Updates the chat message with the newly uploaded image file&#39;s
-            URL in lieu of the temporary loading image.
-          </li>
-        </ol>
-        <p>Now you&#39;ll add the functionality to sned an image:</p>
-        <ol type="1" start="1">
-          <li>Go back to the file <code>public/scripts/main.js</code>.</li>
-          <li>Find the function <code>saveImageMessage</code>.</li>
-          <li>Replace the entire function with the following code.</li>
-        </ol>
-        <h3 is-upgraded>
-          <a
-            href="https://github.com/firebase/friendlychat/blob/master/web/public/scripts/main.js#L84-109"
-            target="_blank"
-            >main.js</a
-          >
-        </h3>
-        <pre><code>// Saves a new message containing an image in Firebase.
-// This first saves the image in Firebase storage.
-function saveImageMessage(file) {
-  // 1 - We add a message with a loading icon that will get updated with the shared image.
-  firebase.firestore().collection(&#39;messages&#39;).add({
-    name: getUserName(),
-    imageUrl: LOADING_IMAGE_URL,
-    profilePicUrl: getProfilePicUrl(),
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function(messageRef) {
-    // 2 - Upload the image to Cloud Storage.
-    var filePath = firebase.auth().currentUser.uid + &#39;/&#39; + messageRef.id + &#39;/&#39; + file.name;
-    return firebase.storage().ref(filePath).put(file).then(function(fileSnapshot) {
-      // 3 - Generate a public URL for the file.
-      return fileSnapshot.ref.getDownloadURL().then((url) =&gt; {
-        // 4 - Update the chat message placeholder with the image&#39;s URL.
-        return messageRef.update({
-          imageUrl: url,
-          storageUri: fileSnapshot.metadata.fullPath
-        });
-      });
-    });
-  }).catch(function(error) {
-    console.error(&#39;There was an error uploading a file to Cloud Storage:&#39;, error);
-  });
-}</code></pre>
-        <h3 is-upgraded><strong>Test sending images</strong></h3>
-        <ol type="1" start="1">
-          <li>
-            If your app is still being served, refresh your app in the browser.
-            Otherwise, run <code>firebase serve --only hosting</code> on the
-            command line to start serving the app from
-            <a href="http://localhost:5000" target="_blank"
-              >http://localhost:5000</a
-            >, and then open it in your browser.
-          </li>
-          <li>
-            After signing in, click the image upload button
-            <img
-              style="width: 26.61px"
-              src="https://codelabs.developers.google.com/codelabs/firebase-web/img/a5941d3daaa70956.png"
-            />
-            and select an image file using the file picker. If you&#39;re
-            looking for an image, feel free to use this
-            <a
-              href="https://www.pexels.com/photo/aroma-aromatic-art-artistic-434213/"
-              target="_blank"
-              >nice picture of a coffee cup</a
-            >.
-          </li>
-          <li>
-            A new message should appear in the app&#39;s UI with your selected
-            image:<br /><img
-              style="width: 555.06px"
-              src="https://codelabs.developers.google.com/codelabs/firebase-web/img/eb22bdc11ce003e0.png"
-            />
-          </li>
-        </ol>
-        <p>
-          If you try adding an image while not signed in, you should see a Toast
-          notification telling you that you must sign in to add images.
-        </p>
-      </google-codelab-step>
-
-      <google-codelab-step label="Show notifications" duration="10">
-        <p>
-          We&#39;ll now add support for browser notifications. The app will
-          notify users when new messages are posted in the chat.
-          <a
-            href="https://firebase.google.com/docs/cloud-messaging/"
-            target="_blank"
-            >Firebase Cloud Messaging</a
-          >
-          (FCM) is a cross-platform messaging solution that lets you reliably
-          deliver messages and notifications at no cost.
-        </p>
-        <h3 is-upgraded><strong>Whitelist the GCM Sender ID</strong></h3>
-        <p>
-          In the
-          <a
-            href="https://developers.google.com/web/fundamentals/engage-and-retain/web-app-manifest/"
-            target="_blank"
-            >web app manifest</a
-          >, you need to specify the <code>gcm_sender_id</code>, which is a
-          hard-coded value indicating that FCM is authorized to send messages to
-          this app.
-        </p>
-        <ol type="1" start="1">
-          <li>
-            From the <code>web-start</code> directory, in the
-            <code>public</code> directory, open <code>manifest.json</code>.
-          </li>
-          <li>
-            Add the browser sender ID value in the
-            <code>gcm_sender_id</code> attribute exactly as shown below. Do not
-            change the value from what&#39;s shown below.
-          </li>
-        </ol>
-        <h3 is-upgraded>
-          <a
-            href="https://github.com/firebase/friendlychat/blob/master/web/public/manifest.json#L7.json"
-            target="_blank"
-            >manifest.json</a
-          >
-        </h3>
-        <pre><code>{
-  &#34;name&#34;: &#34;Friendly Chat&#34;,
-  &#34;short_name&#34;: &#34;Friendly Chat&#34;,
-  &#34;start_url&#34;: &#34;/index.html&#34;,
-  &#34;display&#34;: &#34;standalone&#34;,
-  &#34;orientation&#34;: &#34;portrait&#34;,
-  &#34;gcm_sender_id&#34;: &#34;103953800507&#34;
-}</code></pre>
-        <h3 is-upgraded><strong>Add the FCM service worker</strong></h3>
-        <p>
-          The web app needs a
-          <a
-            href="https://developer.mozilla.org/en/docs/Web/API/Service_Worker_API"
-            target="_blank"
-            >service worker</a
-          >
-          that will receive and display web notifications.
-        </p>
-        <ol type="1" start="1">
-          <li>
-            From the <code>web-start</code> directory, in the
-            <code>public</code> directory, create a new file named
-            <code>firebase-messaging-sw.js</code>.
-          </li>
-          <li>Add the following content to that new file.</li>
-        </ol>
-        <h3 is-upgraded>
-          <a
-            href="https://github.com/firebase/friendlychat/blob/master/web/public/firebase-messaging-sw.js#L4-L9.json"
-            target="_blank"
-            >firebase-messaging-sw.js</a
-          >
-        </h3>
-        <pre><code>importScripts(&#39;/__/firebase/6.0.4/firebase-app.js&#39;);
-importScripts(&#39;/__/firebase/6.0.4/firebase-messaging.js&#39;);
-importScripts(&#39;/__/firebase/init.js&#39;);
-
-firebase.messaging();</code></pre>
-        <p>
-          The service worker simply needs to load and initialize the Firebase
-          Cloud Messaging SDK, which will take care of displaying notifications.
-        </p>
-        <h3 is-upgraded><strong>Get FCM device tokens</strong></h3>
-        <p>
-          When notifications have been enabled on a device or browser,
-          you&#39;ll be given a <strong>device token</strong>. This device token
-          is what we use to send a notification to a particular device or
-          particular browser.
-        </p>
-        <p>
-          When the user signs-in, we call the
-          <code>saveMessagingDeviceToken</code> function. That&#39;s where
-          we&#39;ll get the <strong>FCM device token</strong> from the browser
-          and save it to Cloud Firestore.
-        </p>
-        <ol type="1" start="1">
-          <li>Go back to the file <code>public/scripts/main.js</code>.</li>
-          <li>Find the function <code>saveMessagingDeviceToken</code>.</li>
-          <li>Replace the entire function with the following code.</li>
-        </ol>
-        <h3 is-upgraded>
-          <a
-            href="https://github.com/firebase/friendlychat/blob/master/web/public/scripts/main.js#L111-L126"
-            target="_blank"
-            >main.js</a
-          >
-        </h3>
-        <pre><code>// Saves the messaging device token to the datastore.
-function saveMessagingDeviceToken() {
-  firebase.messaging().getToken().then(function(currentToken) {
-    if (currentToken) {
-      console.log(&#39;Got FCM device token:&#39;, currentToken);
-      // Saving the Device Token to the datastore.
-      firebase.firestore().collection(&#39;fcmTokens&#39;).doc(currentToken)
-          .set({uid: firebase.auth().currentUser.uid});
-    } else {
-      // Need to request permissions to show notifications.
-      requestNotificationsPermissions();
-    }
-  }).catch(function(error){
-    console.error(&#39;Unable to get messaging token.&#39;, error);
-  });
-}</code></pre>
-        <p>
-          However, this code won&#39;t work initially. For your app to be able
-          to retrieve the device token, the user needs to grant your app
-          permission to show notifications (next step of the codelab).
-        </p>
-        <h3 is-upgraded>
-          <strong>Request permissions to show notifications</strong>
-        </h3>
-        <p>
-          When the user has not yet granted your app permission to show
-          notifications, you won&#39;t be given a device token. In this case, we
-          call the <code>firebase.messaging().requestPermission()</code> method,
-          which will display a browser dialog asking for this permission (<a
-            href="https://caniuse.com/#feat=push-api"
-            target="_blank"
-            >in supported browsers</a
-          >).
-        </p>
-        <p class="image-container">
-          <img
-            style="width: 567.50px"
-            src="https://codelabs.developers.google.com/codelabs/firebase-web/img/93ec8bf8a1fea7e1.png"
-          />
-        </p>
-        <ol type="1" start="1">
-          <li>Go back to the file <code>public/scripts/main.js</code>.</li>
-          <li>
-            Find the function <code>requestNotificationsPermissions</code>.
-          </li>
-          <li>Replace the entire function with the following code.</li>
-        </ol>
-        <h3 is-upgraded>
-          <a
-            href="https://github.com/firebase/friendlychat/blob/master/web/public/scripts/main.js#L128-L137"
-            target="_blank"
-            >main.js</a
-          >
-        </h3>
-        <pre><code>// Requests permission to show notifications.
-function requestNotificationsPermissions() {
-  console.log(&#39;Requesting notifications permission...&#39;);
-  firebase.messaging().requestPermission().then(function() {
-    // Notification permission granted.
-    saveMessagingDeviceToken();
-  }).catch(function(error) {
-    console.error(&#39;Unable to get permission to notify.&#39;, error);
-  });
-}</code></pre>
-        <h3 is-upgraded><strong>Get your device token</strong></h3>
-        <ol type="1" start="1">
-          <li>
-            If your app is still being served, refresh your app in the browser.
-            Otherwise, run <code>firebase serve</code> on the command line to
-            start serving the app from
-            <a href="http://localhost:5000" target="_blank"
-              >http://localhost:5000</a
-            >, and then open it in your browser.
-          </li>
-          <li>
-            After signing in, the notifications permission dialog should
-            appear:<br /><img
-              style="width: 480.00px"
-              src="https://codelabs.developers.google.com/codelabs/firebase-web/img/4169287ac98921d0.png"
-            />
-          </li>
-          <li>Click <strong>Allow</strong>.</li>
-          <li>
-            Open the JavaScript console of your browser. You should see the
-            following message:<br /><code
-              >Got FCM device token:
-              cWL6w:APA91bHP...4jDPL_A-wPP06GJp1OuekTaTZI5K2Tu</code
-            >
-          </li>
-          <li>
-            Copy your device token. You&#39;ll need it for the next stage of the
-            codelab.
-          </li>
-        </ol>
-        <h3 is-upgraded><strong>Send a notification to your device</strong></h3>
-        <p>Now that you have your device token, you can send a notification.</p>
-        <ol type="1" start="1">
-          <li>
-            In addition to the device token, you&#39;ll also need your Firebase
-            app&#39;s <strong>Server Key</strong>. To obtain this key, go to
-            <a
-              href="https://console.firebase.google.com/project/_/settings/cloudmessaging"
-              target="_blank"
-              ><strong
-                >Firebase Console &gt; Project Settings &gt; Cloud
-                Messaging</strong
-              ></a
-            >, then copy the <strong>Server Key</strong>.
-          </li>
-        </ol>
-        <p>
-          To send a notification, you&#39;ll need to send the following HTTP
-          request:
-        </p>
-        <pre><code>POST /fcm/send HTTP/1.1
-Host: fcm.googleapis.com
-Content-Type: application/json
-Authorization: key=YOUR_SERVER_KEY
-
-{
-  &#34;notification&#34;: {
-    &#34;title&#34;: &#34;New chat message!&#34;,
-    &#34;body&#34;: &#34;There is a new message in FriendlyChat&#34;,
-    &#34;icon&#34;: &#34;/images/profile_placeholder.png&#34;,
-    &#34;click_action&#34;: &#34;http://localhost:5000&#34;
-  },
-  &#34;to&#34;:&#34;YOUR_DEVICE_TOKEN&#34;
-}</code></pre>
-        <ol type="1" start="2">
-          <li>
-            On the command line, run the following
-            <a href="https://curl.haxx.se/" target="_blank">cURL</a> command.
-          </li>
-        </ol>
-        <aside class="warning">
-          <p>
-            Don&#39;t forget to replace <code>YOUR_SERVER_KEY</code> and
-            <code>YOUR_DEVICE_TOKEN</code> with the values of your
-            <strong>Server Key</strong> and your <strong>Device Token</strong>.
-          </p>
-        </aside>
-        <pre><code>curl -H &#34;Content-Type: application/json&#34; \
-     -H &#34;Authorization: key=YOUR_SERVER_KEY&#34; \
-     -d &#39;{
-           &#34;notification&#34;: {
-             &#34;title&#34;: &#34;New chat message!&#34;,
-             &#34;body&#34;: &#34;There is a new message in FriendlyChat&#34;,
-             &#34;icon&#34;: &#34;/images/profile_placeholder.png&#34;,
-             &#34;click_action&#34;: &#34;http://localhost:5000&#34;
-           },
-           &#34;to&#34;: &#34;YOUR_DEVICE_TOKEN&#34;
-         }&#39; \
-     https://fcm.googleapis.com/fcm/send</code></pre>
-        <aside class="special">
-          <p>
-            If you don&#39;t have cURL or if it&#39;s hard to install on your
-            machine (for instance, on Windows), feel free to use this service:
-            <a href="https://onlinecurl.com/" target="_blank">onlinecurl.com</a
-            >.
-          </p>
-          <p>
-            <strong>Beware</strong> that sharing your Server Key with a
-            third-party service may not be secure. Make sure to refresh your
-            Server Key after test/development.
-          </p>
-        </aside>
-        <p>
-          Note that the notification will only appear if the FriendlyChat app is
-          in the background. You must navigate away or display another tab for
-          the notification to be displayed. When the app is in the foreground,
-          there is a way to
-          <a
-            href="https://firebase.google.com/docs/cloud-messaging/js/receive#handle_messages_when_your_web_app_is_in_the_foreground"
-            target="_blank"
-            >catch the messages sent by FCM</a
-          >.
-        </p>
-        <p>
-          If your app is in the background, a notification should appear in your
-          browser, as in this example:
-        </p>
-        <p class="image-container">
-          <img
-            style="width: 377.78px"
-            src="https://codelabs.developers.google.com/codelabs/firebase-web/img/a2fe01ddc075e45a.png"
-          />
-        </p>
-        <aside class="special">
-          <p>
-            In a followup codelab,
-            <a
-              href="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions"
-              target="_blank"
-              ><strong>Firebase SDK for Cloud Functions</strong></a
-            >, we&#39;ll see how to automate sending notifications from the
-            backend for each new message posted in the chat app.
-          </p>
-        </aside>
-      </google-codelab-step>
-
       <google-codelab-step label="Cloud Firestore security rules" duration="5">
         <h3 is-upgraded>View<strong> database security rules</strong></h3>
         <p>
@@ -1768,149 +1352,6 @@ i  storage: uploading rules storage.rules...
 Project Console: https://console.firebase.google.com/project/friendlychat-1234/overview</code></pre>
       </google-codelab-step>
 
-      <google-codelab-step label="Collect performance data" duration="3">
-        <p>
-          You can use the Performance Monitoring SDK to collect real-world
-          performance data from your app and then review and analyze that data
-          in the Firebase console. Performance Monitoring helps you to
-          understand where and when the performance of your app can be improved
-          so that you can use that information to fix performance issues.
-        </p>
-        <p>
-          There are various ways to integrate with the Firebase Performance
-          Monitoring JavaScript SDK. In this codelab, we enabled Performance
-          Monitoring from <strong>Hosting URLs</strong>. Refer to the
-          <a
-            href="https://firebase.google.com/docs/perf-mon/get-started-web"
-            target="_blank"
-            >documentation</a
-          >
-          to see other methods of enabling the SDK.
-        </p>
-        <h2 is-upgraded>Automatic traces</h2>
-        <p>
-          Since we included <code>firebase-performance.js</code> and
-          <code>init.js</code> in an earlier step of the codelab, we just need
-          to add one line to tell Performance Monitoring to automatically
-          collect page load and network request metrics for you when users visit
-          your deployed site!
-        </p>
-        <ol type="1" start="1">
-          <li>
-            In <code>public/scripts/main.js</code>, add the following line below
-            the existing <code>TODO</code> to initialize Performance Monitoring.
-          </li>
-        </ol>
-        <h3 is-upgraded>
-          <a
-            href="https://github.com/firebase/friendlychat-web/blob/master/web/public/scripts/main.js#L386-L387"
-            target="_blank"
-            >main.js</a
-          >
-        </h3>
-        <pre><code>// TODO: Initialize Firebase Performance Monitoring.
-firebase.performance();</code></pre>
-        <h2 is-upgraded>
-          <strong>Measure first input delay (optional)</strong>
-        </h2>
-        <p>
-          <a
-            href="https://developers.google.com/web/updates/2018/05/first-input-delay"
-            target="_blank"
-            >First input delay</a
-          >
-          is useful since the browser responding to a user interaction gives
-          your users their first impressions about the responsiveness of your
-          app.
-        </p>
-        <p>
-          First input delay starts when the user first interacts with an element
-          on the page, like clicking a button or hyperlink. It stops immediately
-          after the browser is able to respond to the input, meaning that the
-          browser isn&#39;t busy loading or parsing your page&#39;s content.
-        </p>
-        <p>
-          If you&#39;d like to measure first input delay, you&#39;ll need to
-          include the following code directly.
-        </p>
-        <ol type="1" start="1">
-          <li>Open <code>public/index.html</code>.</li>
-          <li>Uncomment the <code>script</code> tag on the following line.</li>
-        </ol>
-        <p>
-          <a
-            href="https://github.com/firebase/friendlychat-web/blob/master/web/public/index.html#L52-L53"
-            target="_blank"
-            ><strong>index.html</strong></a
-          >
-        </p>
-        <pre><code>&lt;!-- TODO: Enable First Input Delay polyfill library. --&gt;
-&lt;script type=&#34;text/javascript&#34;&gt;!function(n,e){var t,o,i,c=[],f={passive:!0,capture:!0},r=new Date,a=&#34;pointerup&#34;,u=&#34;pointercancel&#34;;function p(n,c){t||(t=c,o=n,i=new Date,w(e),s())}function s(){o&gt;=0&amp;&amp;o&lt;i-r&amp;&amp;(c.forEach(function(n){n(o,t)}),c=[])}function l(t){if(t.cancelable){var o=(t.timeStamp&gt;1e12?new Date:performance.now())-t.timeStamp;&#34;pointerdown&#34;==t.type?function(t,o){function i(){p(t,o),r()}function c(){r()}function r(){e(a,i,f),e(u,c,f)}n(a,i,f),n(u,c,f)}(o,t):p(o,t)}}function w(n){[&#34;click&#34;,&#34;mousedown&#34;,&#34;keydown&#34;,&#34;touchstart&#34;,&#34;pointerdown&#34;].forEach(function(e){n(e,l,f)})}w(n),self.perfMetrics=self.perfMetrics||{},self.perfMetrics.onFirstInputDelay=function(n){c.push(n),s()}}(addEventListener,removeEventListener);&lt;/script&gt;</code></pre>
-        <p>
-          To read more about the first input delay polyfill, take a look at the
-          <a
-            href="https://firebase.google.com/docs/perf-mon/get-started-web#add-first-input-delay-polyfill"
-            target="_blank"
-            >documentation</a
-          >.
-        </p>
-        <h2 is-upgraded><strong>View performance data</strong></h2>
-        <aside class="warning">
-          <p>
-            <strong>Note</strong>: Performance data usually display within 12
-            hours. Check back later if you don&#39;t yet see any data in the
-            Firebase console.
-          </p>
-        </aside>
-        <p>
-          Since you haven&#39;t deployed your site yet (you&#39;ll deploy it in
-          the next step), here&#39;s a screenshot showing the metrics about page
-          load performance that you&#39;ll see in the Firebase console within 12
-          hours of users interacting with your deployed site:
-        </p>
-        <p class="image-container">
-          <img
-            style="width: 624.00px"
-            src="https://codelabs.developers.google.com/codelabs/firebase-web/img/d94796f61018597.png"
-          />
-        </p>
-        <p>
-          When you integrate the Performance Monitoring SDK into your app, you
-          don&#39;t need to write any other code before your app starts
-          automatically monitoring several critical aspects of performance. For
-          web apps, the SDK logs aspects like first contentful paint, ability
-          for users to interact with your app, and more.
-        </p>
-        <p>
-          You can also set up custom traces, metrics, and attributes to measure
-          specific aspects of your app. Visit the documentation to learn more
-          about
-          <a
-            href="https://firebase.google.com/docs/perf-mon/get-started-web#add-custom-trace"
-            target="_blank"
-            >custom traces and metrics</a
-          >
-          and
-          <a
-            href="https://firebase.google.com/docs/perf-mon/custom-attributes"
-            target="_blank"
-            >custom attributes</a
-          >.
-        </p>
-        <aside class="special">
-          <p>
-            There are other ways to integrate with the Firebase Performance
-            Monitoring JavaScript SDK. Visit the
-            <a
-              href="https://firebase.google.com/docs/perf-mon/get-started-web"
-              target="_blank"
-              >getting started guide</a
-            >
-            for details.
-          </p>
-        </aside>
-      </google-codelab-step>
-
       <google-codelab-step
         label="Deploy your app using Firebase Hosting"
         duration="3"
@@ -2020,380 +1461,6 @@ Hosting URL: https://friendlychat-1234.firebaseapp.com</code></pre>
           and tools, including the history of your deploys, the functionality to
           roll back to previous versions of your app, and the workflow to set up
           a custom domain.
-        </p>
-      </google-codelab-step>
-
-      <google-codelab-step label="Congratulations!" duration="0">
-        <p>
-          You&#39;ve used Firebase to build a real-time chat web application!
-        </p>
-        <h3 class="checklist" is-upgraded>
-          <strong>What we&#39;ve covered</strong>
-        </h3>
-        <ul class="checklist">
-          <li>Firebase Authentication</li>
-          <li>Cloud Firestore</li>
-          <li>Firebase SDK for Cloud Storage</li>
-          <li>Firebase Cloud Messaging</li>
-          <li>Firebase Performance Monitoring</li>
-          <li>Firebase Hosting</li>
-        </ul>
-        <h3 is-upgraded>Next steps</h3>
-        <aside class="special">
-          <p>
-            Continue on to the
-            <a
-              href="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/#4"
-              target="_blank"
-              ><strong>Cloud Functions for Firebase</strong></a
-            >
-            codelab to learn how to use the Firebase SDK for Cloud Functions and
-            add some backend tasks to your chat app. You can start directly on
-            Step 5 of that codelab since you&#39;ve already set up your Firebase
-            project.
-          </p>
-        </aside>
-        <aside class="special">
-          <p>
-            Want to learn more about Cloud Firestore? Maybe you want to learn
-            about subcollections and transactions? Head over to the
-            <a
-              href="https://codelabs.developers.google.com/codelabs/firestore-web/#0"
-              target="_blank"
-              ><strong>Cloud Firestore web codelab</strong></a
-            >
-            for a codelab that goes into greater depth on Cloud Firestore.
-          </p>
-        </aside>
-        <aside class="special">
-          <p>
-            Want to learn more about Firebase Performance Monitoring for Web?
-            Head over to the
-            <a
-              href="https://codelabs.developers.google.com/codelabs/firebase-perf-mon-web/"
-              target="_blank"
-              ><strong
-                >Firebase performance monitoring for web codelab</strong
-              ></a
-            >
-            for a codelab that goes into greater depth on Firebase Performance
-            Monitoring.
-          </p>
-        </aside>
-        <h3 is-upgraded><strong>Learn more</strong></h3>
-        <ul>
-          <li>
-            <a href="https://firebase.google.com" target="_blank"
-              >firebase.google.com</a
-            >
-          </li>
-        </ul>
-      </google-codelab-step>
-      <google-codelab-step label="Overview" duration="1">
-        <p>
-          In this codelab, you&#39;ll learn how to use the Firebase SDK for
-          Google Cloud Functions to improve a Chat Web app and how to use Cloud
-          Functions to send notifications to users of the Chat app.
-        </p>
-        <p class="image-container">
-          <img
-            style="width: 537.95px"
-            src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/eb22bdc11ce003e0.png"
-          />
-        </p>
-        <aside class="special">
-          <p>
-            This codelab is meant as a sequel of the
-            <a
-              href="https://codelabs.developers.google.com/codelabs/firebase-web"
-              target="_blank"
-              ><strong>Firebase Web Codelab</strong></a
-            >
-            in which you learn how to build a chat app using the Firebase Web
-            SDK. If you would like to learn how to use the Firebase platform on
-            the Web by building a chat app, follow the
-            <a
-              href="https://codelabs.developers.google.com/codelabs/firebase-web"
-              target="_blank"
-              ><strong>Firebase Web Codelab</strong></a
-            >
-            first. If you already know how to use the Firebase platform and CLI
-            and want to learn about the Firebase SDK for Cloud Functions
-            you&#39;re at the right place. We&#39;ll show you how to clone the
-            completed <strong>Firebase Web Codelab</strong> below.
-          </p>
-        </aside>
-        <h3 class="checklist" is-upgraded>What you&#39;ll learn</h3>
-        <ul class="checklist">
-          <li>Create Google Cloud Functions using the Firebase SDK.</li>
-          <li>
-            Trigger Cloud Functions based on Auth, Cloud Storage and Cloud
-            Firestore events.
-          </li>
-          <li>Add Firebase Cloud Messaging support to your web app.</li>
-        </ul>
-        <h3 is-upgraded>What you&#39;ll need</h3>
-        <ul>
-          <li>
-            The IDE/text editor of your choice such as
-            <a href="https://www.jetbrains.com/webstorm" target="_blank"
-              >WebStorm</a
-            >, <a href="https://atom.io/" target="_blank">Atom</a> or
-            <a href="https://www.sublimetext.com/" target="_blank">Sublime</a>.
-          </li>
-          <li>A terminal to run shell commands with NodeJS v8 installed.</li>
-          <li>A browser such as Chrome.</li>
-          <li>The sample code. See next step for this.</li>
-        </ul>
-      </google-codelab-step>
-
-      <google-codelab-step label="Get the sample code" duration="3">
-        <p>
-          Clone the
-          <a href="https://github.com/firebase/friendlychat" target="_blank"
-            >GitHub repository</a
-          >
-          from the command line:
-        </p>
-        <pre><code>git clone https://github.com/firebase/friendlychat</code></pre>
-        <aside class="special">
-          <p>
-            The firebase-codelabs repository contains sample projects for
-            multiple platforms. This codelab only uses these two repositories:
-          </p>
-          <ul>
-            <li>
-              <img
-                alt="android_studio_folder.png"
-                style="width: 20.00px"
-                src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/bb745dc85ae69f6b.png"
-              /><strong>cloud-functions-start</strong>—The starting code that
-              you&#39;ll build upon in this codelab. Note: This is the same code
-              as the final code for the Firebase Web Codelab.
-            </li>
-            <li>
-              <img
-                alt="android_studio_folder.png"
-                style="width: 20.00px"
-                src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/bb745dc85ae69f6b.png"
-              /><strong>cloud-functions</strong>—The complete code for the
-              finished sample app.
-            </li>
-          </ul>
-          <p>
-            <strong>Note</strong>: If you would like to run the finished app,
-            you will still have to create a project in the Firebase console. See
-            the
-            <strong>Create a Firebase project and Setup your app</strong>
-            section for instructions.
-          </p>
-        </aside>
-        <h3 is-upgraded>Import the starter app</h3>
-        <p>
-          Using your IDE, open or import the
-          <img
-            alt="android_studio_folder.png"
-            style="width: 20.00px"
-            src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/bb745dc85ae69f6b.png"
-          /><code>cloud-functions-start</code> directory from the sample code
-          directory. This directory contains the starting code for the codelab
-          which consists of a fully functional Chat Web App.
-        </p>
-      </google-codelab-step>
-
-      <google-codelab-step
-        label="Create a Firebase project and Set up your app"
-        duration="5"
-      >
-        <h3 is-upgraded><strong>Create project</strong></h3>
-        <p>
-          In the
-          <a href="https://console.firebase.google.com" target="_blank"
-            >Firebase console</a
-          >
-          click on <strong>Add Project</strong> and call it
-          <strong>FriendlyChat</strong>.
-        </p>
-        <p>Click <strong>Create Project</strong>.</p>
-        <aside class="special">
-          <p>
-            Note that while your project will be called
-            <strong>FriendlyChat</strong> it will be assigned a unique ID in the
-            form <strong>friendlychat-1234</strong> which is what is ultimately
-            used to identify your project.
-          </p>
-        </aside>
-        <h3 is-upgraded><strong>Enable Google Auth</strong></h3>
-        <p>
-          To let users sign-in the app we&#39;ll use Google auth which needs to
-          be enabled.
-        </p>
-        <p>
-          In the Firebase Console open the <strong>Develop</strong> section &gt;
-          <strong>Authentication</strong> &gt;
-          <strong>SIGN IN METHOD</strong> tab (or
-          <a
-            href="https://console.firebase.google.com/project/_/authentication/providers"
-            target="_blank"
-            >click here</a
-          >
-          to go there) you need to enable the <strong>Google</strong> Sign-in
-          Provider and click <strong>SAVE</strong>. This will allow users to
-          sign-in the Web app with their Google accounts.
-        </p>
-        <p>
-          Also feel free to set the public facing name of your app to
-          <strong>Friendly Chat</strong>:
-        </p>
-        <p class="image-container">
-          <img
-            style="width: 624.00px"
-            src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/8290061806aacb46.png"
-          />
-        </p>
-        <h3 is-upgraded><strong>Enable Cloud Storage</strong></h3>
-        <p>
-          The app uses Cloud Storage to upload pics. To enable Cloud Storage on
-          your Firebase project visit the <strong>Storage</strong> section and
-          click the <strong>Get Started</strong> button. Then Click
-          <strong>Got It</strong> when you receive the disclaimer about the
-          security rules.
-        </p>
-        <p class="image-container">
-          <img
-            style="width: 624.00px"
-            src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/842ad84821323ef5.png"
-          />
-        </p>
-      </google-codelab-step>
-
-      <google-codelab-step
-        label="Install the Firebase Command Line Interface"
-        duration="2"
-      >
-        <p>
-          The Firebase Command Line Interface (CLI) will allow you to serve the
-          web app locally and deploy your web app and Cloud Functions.
-        </p>
-        <aside class="special">
-          <p>
-            To install the CLI you need to have installed
-            <a href="https://www.npmjs.com/" target="_blank">npm</a> which
-            typically comes with
-            <a href="https://nodejs.org/en/" target="_blank">NodeJS</a>.
-          </p>
-        </aside>
-        <p>To install or upgrade the CLI run the following npm command:</p>
-        <pre><code>npm -g install firebase-tools</code></pre>
-        <aside class="warning">
-          <p>
-            Doesn&#39;t work? You may need to
-            <a
-              href="https://docs.npmjs.com/getting-started/fixing-npm-permissions"
-              target="_blank"
-              >change npm permissions.</a
-            >
-          </p>
-        </aside>
-        <p>
-          To verify that the CLI has been installed correctly, open a console
-          and run:
-        </p>
-        <pre><code>firebase --version</code></pre>
-        <p>
-          Make sure the version of the Firebase CLI is above
-          <strong>4.0.0</strong> so that it has all the latest features required
-          for Cloud Functions. If not, run
-          <code>npm install -g firebase-tools</code> to upgrade as shown above.
-        </p>
-        <p>Authorize the Firebase CLI by running:</p>
-        <pre><code>firebase login</code></pre>
-        <p>
-          Make sure you are in the <code>cloud-functions-start</code> directory
-          then set up the Firebase CLI to use your Firebase Project:
-        </p>
-        <pre><code>firebase use --add</code></pre>
-        <p>
-          Then select your Project ID and follow the instructions. When
-          prompted, you can choose any Alias, such as <code>codelab</code> for
-          instance.
-        </p>
-      </google-codelab-step>
-
-      <google-codelab-step label="Deploy and run the web app" duration="1">
-        <p>
-          Now that you have imported and configured your project you are ready
-          to run the web app for the first time. Open a console at the
-          <code>cloud-functions-start</code> folder and run
-          <code>firebase deploy --except functions</code> this will only deploy
-          the web app to Firebase hosting:
-        </p>
-        <pre><code>firebase deploy --except functions</code></pre>
-        <p>This is the console output you should see:</p>
-        <pre><code>i deploying database, storage, hosting
-✔  database: rules ready to deploy.
-i  storage: checking rules for compilation errors...
-✔  storage: rules file compiled successfully
-i  hosting: preparing ./ directory for upload...
-✔  hosting: ./ folder uploaded successfully
-✔ storage: rules file compiled successfully
-✔ hosting: 8 files uploaded successfully
-i starting release process (may take several minutes)...
-
-✔ Deploy complete!
-
-Project Console: https://console.firebase.google.com/project/friendlychat-1234/overview
-Hosting URL: https://friendlychat-1234.firebaseapp.com</code></pre>
-        <h3 is-upgraded><strong>Open the web app</strong></h3>
-        <p>
-          The last line should display the <strong>Hosting URL.</strong> The web
-          app should now be served from this URL which should be of the form
-          https://&lt;project-id&gt;.firebaseapp.com. Open it. You should see a
-          chat app&#39;s functioning UI.
-        </p>
-        <p>
-          Sign-in to the app by using the
-          <strong>SIGN-IN WITH GOOGLE</strong> button and feel free to add some
-          messages and post images:
-        </p>
-        <p class="image-container">
-          <img
-            style="width: 537.95px"
-            src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/eb22bdc11ce003e0.png"
-          />
-        </p>
-        <p>
-          If you sign-in the app for the first time on a new browser make sure
-          you allow notifications when prompted:<br /><img
-            style="width: 523.90px"
-            src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/93ec8bf8a1fea7e1.png"
-          />
-        </p>
-        <p>
-          We&#39;ll need you to have notifications enabled at a later point.
-        </p>
-        <p>
-          If you have accidentally clicked <strong>Block</strong> you can change
-          this setting by clicking on the <strong>🔒 Secure</strong> button on
-          the left of the URL in the Chrome Omnibar and selecting
-          <strong>Notifications &gt; Always Allow on this Site</strong>:
-        </p>
-        <p class="image-container">
-          <img
-            style="width: 362.28px"
-            src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/4b309f3754532766.png"
-          />
-        </p>
-        <aside class="warning">
-          <p>
-            You don&#39;t see this? If you are in an incognito browser session
-            note that Firebase Cloud Messaging is disabled. To complete this
-            step use a regular browser session.
-          </p>
-        </aside>
-        <p>
-          Now we&#39;ll be adding some functionality using the Firebase SDK for
-          Cloud Functions.
         </p>
       </google-codelab-step>
 
@@ -2701,6 +1768,195 @@ Project Console: https://console.firebase.google.com/project/friendlypchat-1234/
         </aside>
       </google-codelab-step>
 
+      <google-codelab-step label="Deploy and run the web app" duration="1">
+        <p>
+          Now that you have imported and configured your project you are ready
+          to run the web app for the first time. Open a console at the
+          <code>cloud-functions-start</code> folder and run
+          <code>firebase deploy --except functions</code> this will only deploy
+          the web app to Firebase hosting:
+        </p>
+        <pre><code>firebase deploy --except functions</code></pre>
+        <p>This is the console output you should see:</p>
+        <pre><code>i deploying database, storage, hosting
+✔  database: rules ready to deploy.
+i  storage: checking rules for compilation errors...
+✔  storage: rules file compiled successfully
+i  hosting: preparing ./ directory for upload...
+✔  hosting: ./ folder uploaded successfully
+✔ storage: rules file compiled successfully
+✔ hosting: 8 files uploaded successfully
+i starting release process (may take several minutes)...
+
+✔ Deploy complete!
+
+Project Console: https://console.firebase.google.com/project/friendlychat-1234/overview
+Hosting URL: https://friendlychat-1234.firebaseapp.com</code></pre>
+        <h3 is-upgraded><strong>Open the web app</strong></h3>
+        <p>
+          The last line should display the <strong>Hosting URL.</strong> The web
+          app should now be served from this URL which should be of the form
+          https://&lt;project-id&gt;.firebaseapp.com. Open it. You should see a
+          chat app&#39;s functioning UI.
+        </p>
+        <p>
+          Sign-in to the app by using the
+          <strong>SIGN-IN WITH GOOGLE</strong> button and feel free to add some
+          messages and post images:
+        </p>
+        <p class="image-container">
+          <img
+            style="width: 537.95px"
+            src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/eb22bdc11ce003e0.png"
+          />
+        </p>
+        <p>
+          If you sign-in the app for the first time on a new browser make sure
+          you allow notifications when prompted:<br /><img
+            style="width: 523.90px"
+            src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/93ec8bf8a1fea7e1.png"
+          />
+        </p>
+        <p>
+          We&#39;ll need you to have notifications enabled at a later point.
+        </p>
+        <p>
+          If you have accidentally clicked <strong>Block</strong> you can change
+          this setting by clicking on the <strong>🔒 Secure</strong> button on
+          the left of the URL in the Chrome Omnibar and selecting
+          <strong>Notifications &gt; Always Allow on this Site</strong>:
+        </p>
+        <p class="image-container">
+          <img
+            style="width: 362.28px"
+            src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/4b309f3754532766.png"
+          />
+        </p>
+        <aside class="warning">
+          <p>
+            You don&#39;t see this? If you are in an incognito browser session
+            note that Firebase Cloud Messaging is disabled. To complete this
+            step use a regular browser session.
+          </p>
+        </aside>
+        <p>
+          Now we&#39;ll be adding some functionality using the Firebase SDK for
+          Cloud Functions.
+        </p>
+      </google-codelab-step>
+
+      <google-codelab-step label="Send images" duration="10">
+        <p>We&#39;ll now add a feature that shares images.</p>
+        <p>
+          While the Cloud Firestore is good for storing structured data, Cloud
+          Storage is better suited for storing files.
+          <a href="https://firebase.google.com/docs/storage/" target="_blank"
+            >Cloud Storage for Firebase</a
+          >
+          is a file/blob storage service, and we&#39;ll use it to store any
+          images that a user shares using our app.
+        </p>
+        <h3 is-upgraded>Save images to Cloud Storage</h3>
+        <p>
+          For this codelab, we&#39;ve already added for you a button that
+          triggers a file picker dialog. After selecting a file, the
+          <code>saveImageMessage</code> function is called, and you can get a
+          reference to the selected file. The
+          <code>saveImageMessage</code> function accomplishes the following:
+        </p>
+        <ol type="1" start="1">
+          <li>
+            Creates a &#34;placeholder&#34; chat message in the chat feed, so
+            that users see a &#34;Loading&#34; animation while we upload the
+            image.
+          </li>
+          <li>
+            Uploads the image file to Cloud Storage to this path:
+            <code>/&lt;uid&gt;/&lt;messageId&gt;/&lt;file_name&gt;</code>
+          </li>
+          <li>Generates a publicly readable URL for the image file.</li>
+          <li>
+            Updates the chat message with the newly uploaded image file&#39;s
+            URL in lieu of the temporary loading image.
+          </li>
+        </ol>
+        <p>Now you&#39;ll add the functionality to sned an image:</p>
+        <ol type="1" start="1">
+          <li>Go back to the file <code>public/scripts/main.js</code>.</li>
+          <li>Find the function <code>saveImageMessage</code>.</li>
+          <li>Replace the entire function with the following code.</li>
+        </ol>
+        <h3 is-upgraded>
+          <a
+            href="https://github.com/firebase/friendlychat/blob/master/web/public/scripts/main.js#L84-109"
+            target="_blank"
+            >main.js</a
+          >
+        </h3>
+        <pre><code>// Saves a new message containing an image in Firebase.
+// This first saves the image in Firebase storage.
+function saveImageMessage(file) {
+  // 1 - We add a message with a loading icon that will get updated with the shared image.
+  firebase.firestore().collection(&#39;messages&#39;).add({
+    name: getUserName(),
+    imageUrl: LOADING_IMAGE_URL,
+    profilePicUrl: getProfilePicUrl(),
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(messageRef) {
+    // 2 - Upload the image to Cloud Storage.
+    var filePath = firebase.auth().currentUser.uid + &#39;/&#39; + messageRef.id + &#39;/&#39; + file.name;
+    return firebase.storage().ref(filePath).put(file).then(function(fileSnapshot) {
+      // 3 - Generate a public URL for the file.
+      return fileSnapshot.ref.getDownloadURL().then((url) =&gt; {
+        // 4 - Update the chat message placeholder with the image&#39;s URL.
+        return messageRef.update({
+          imageUrl: url,
+          storageUri: fileSnapshot.metadata.fullPath
+        });
+      });
+    });
+  }).catch(function(error) {
+    console.error(&#39;There was an error uploading a file to Cloud Storage:&#39;, error);
+  });
+}</code></pre>
+        <h3 is-upgraded><strong>Test sending images</strong></h3>
+        <ol type="1" start="1">
+          <li>
+            If your app is still being served, refresh your app in the browser.
+            Otherwise, run <code>firebase serve --only hosting</code> on the
+            command line to start serving the app from
+            <a href="http://localhost:5000" target="_blank"
+              >http://localhost:5000</a
+            >, and then open it in your browser.
+          </li>
+          <li>
+            After signing in, click the image upload button
+            <img
+              style="width: 26.61px"
+              src="https://codelabs.developers.google.com/codelabs/firebase-web/img/a5941d3daaa70956.png"
+            />
+            and select an image file using the file picker. If you&#39;re
+            looking for an image, feel free to use this
+            <a
+              href="https://www.pexels.com/photo/aroma-aromatic-art-artistic-434213/"
+              target="_blank"
+              >nice picture of a coffee cup</a
+            >.
+          </li>
+          <li>
+            A new message should appear in the app&#39;s UI with your selected
+            image:<br /><img
+              style="width: 555.06px"
+              src="https://codelabs.developers.google.com/codelabs/firebase-web/img/eb22bdc11ce003e0.png"
+            />
+          </li>
+        </ol>
+        <p>
+          If you try adding an image while not signed in, you should see a Toast
+          notification telling you that you must sign in to add images.
+        </p>
+      </google-codelab-step>
+
       <google-codelab-step label="Images moderation" duration="10">
         <p>
           Users can upload all type of images in the chat, and it is always
@@ -2956,6 +2212,314 @@ Project Console: https://console.firebase.google.com/project/friendlychat-1234/o
         </ol>
       </google-codelab-step>
 
+      <google-codelab-step label="Show notifications" duration="10">
+        <p>
+          We&#39;ll now add support for browser notifications. The app will
+          notify users when new messages are posted in the chat.
+          <a
+            href="https://firebase.google.com/docs/cloud-messaging/"
+            target="_blank"
+            >Firebase Cloud Messaging</a
+          >
+          (FCM) is a cross-platform messaging solution that lets you reliably
+          deliver messages and notifications at no cost.
+        </p>
+        <h3 is-upgraded><strong>Whitelist the GCM Sender ID</strong></h3>
+        <p>
+          In the
+          <a
+            href="https://developers.google.com/web/fundamentals/engage-and-retain/web-app-manifest/"
+            target="_blank"
+            >web app manifest</a
+          >, you need to specify the <code>gcm_sender_id</code>, which is a
+          hard-coded value indicating that FCM is authorized to send messages to
+          this app.
+        </p>
+        <ol type="1" start="1">
+          <li>
+            From the <code>web-start</code> directory, in the
+            <code>public</code> directory, open <code>manifest.json</code>.
+          </li>
+          <li>
+            Add the browser sender ID value in the
+            <code>gcm_sender_id</code> attribute exactly as shown below. Do not
+            change the value from what&#39;s shown below.
+          </li>
+        </ol>
+        <h3 is-upgraded>
+          <a
+            href="https://github.com/firebase/friendlychat/blob/master/web/public/manifest.json#L7.json"
+            target="_blank"
+            >manifest.json</a
+          >
+        </h3>
+        <pre><code>{
+  &#34;name&#34;: &#34;Friendly Chat&#34;,
+  &#34;short_name&#34;: &#34;Friendly Chat&#34;,
+  &#34;start_url&#34;: &#34;/index.html&#34;,
+  &#34;display&#34;: &#34;standalone&#34;,
+  &#34;orientation&#34;: &#34;portrait&#34;,
+  &#34;gcm_sender_id&#34;: &#34;103953800507&#34;
+}</code></pre>
+        <h3 is-upgraded><strong>Add the FCM service worker</strong></h3>
+        <p>
+          The web app needs a
+          <a
+            href="https://developer.mozilla.org/en/docs/Web/API/Service_Worker_API"
+            target="_blank"
+            >service worker</a
+          >
+          that will receive and display web notifications.
+        </p>
+        <ol type="1" start="1">
+          <li>
+            From the <code>web-start</code> directory, in the
+            <code>public</code> directory, create a new file named
+            <code>firebase-messaging-sw.js</code>.
+          </li>
+          <li>Add the following content to that new file.</li>
+        </ol>
+        <h3 is-upgraded>
+          <a
+            href="https://github.com/firebase/friendlychat/blob/master/web/public/firebase-messaging-sw.js#L4-L9.json"
+            target="_blank"
+            >firebase-messaging-sw.js</a
+          >
+        </h3>
+        <pre><code>importScripts(&#39;/__/firebase/6.0.4/firebase-app.js&#39;);
+importScripts(&#39;/__/firebase/6.0.4/firebase-messaging.js&#39;);
+importScripts(&#39;/__/firebase/init.js&#39;);
+
+firebase.messaging();</code></pre>
+        <p>
+          The service worker simply needs to load and initialize the Firebase
+          Cloud Messaging SDK, which will take care of displaying notifications.
+        </p>
+        <h3 is-upgraded><strong>Get FCM device tokens</strong></h3>
+        <p>
+          When notifications have been enabled on a device or browser,
+          you&#39;ll be given a <strong>device token</strong>. This device token
+          is what we use to send a notification to a particular device or
+          particular browser.
+        </p>
+        <p>
+          When the user signs-in, we call the
+          <code>saveMessagingDeviceToken</code> function. That&#39;s where
+          we&#39;ll get the <strong>FCM device token</strong> from the browser
+          and save it to Cloud Firestore.
+        </p>
+        <ol type="1" start="1">
+          <li>Go back to the file <code>public/scripts/main.js</code>.</li>
+          <li>Find the function <code>saveMessagingDeviceToken</code>.</li>
+          <li>Replace the entire function with the following code.</li>
+        </ol>
+        <h3 is-upgraded>
+          <a
+            href="https://github.com/firebase/friendlychat/blob/master/web/public/scripts/main.js#L111-L126"
+            target="_blank"
+            >main.js</a
+          >
+        </h3>
+        <pre><code>// Saves the messaging device token to the datastore.
+function saveMessagingDeviceToken() {
+  firebase.messaging().getToken().then(function(currentToken) {
+    if (currentToken) {
+      console.log(&#39;Got FCM device token:&#39;, currentToken);
+      // Saving the Device Token to the datastore.
+      firebase.firestore().collection(&#39;fcmTokens&#39;).doc(currentToken)
+          .set({uid: firebase.auth().currentUser.uid});
+    } else {
+      // Need to request permissions to show notifications.
+      requestNotificationsPermissions();
+    }
+  }).catch(function(error){
+    console.error(&#39;Unable to get messaging token.&#39;, error);
+  });
+}</code></pre>
+        <p>
+          However, this code won&#39;t work initially. For your app to be able
+          to retrieve the device token, the user needs to grant your app
+          permission to show notifications (next step of the codelab).
+        </p>
+        <h3 is-upgraded>
+          <strong>Request permissions to show notifications</strong>
+        </h3>
+        <p>
+          When the user has not yet granted your app permission to show
+          notifications, you won&#39;t be given a device token. In this case, we
+          call the <code>firebase.messaging().requestPermission()</code> method,
+          which will display a browser dialog asking for this permission (<a
+            href="https://caniuse.com/#feat=push-api"
+            target="_blank"
+            >in supported browsers</a
+          >).
+        </p>
+        <p class="image-container">
+          <img
+            style="width: 567.50px"
+            src="https://codelabs.developers.google.com/codelabs/firebase-web/img/93ec8bf8a1fea7e1.png"
+          />
+        </p>
+        <ol type="1" start="1">
+          <li>Go back to the file <code>public/scripts/main.js</code>.</li>
+          <li>
+            Find the function <code>requestNotificationsPermissions</code>.
+          </li>
+          <li>Replace the entire function with the following code.</li>
+        </ol>
+        <h3 is-upgraded>
+          <a
+            href="https://github.com/firebase/friendlychat/blob/master/web/public/scripts/main.js#L128-L137"
+            target="_blank"
+            >main.js</a
+          >
+        </h3>
+        <pre><code>// Requests permission to show notifications.
+function requestNotificationsPermissions() {
+  console.log(&#39;Requesting notifications permission...&#39;);
+  firebase.messaging().requestPermission().then(function() {
+    // Notification permission granted.
+    saveMessagingDeviceToken();
+  }).catch(function(error) {
+    console.error(&#39;Unable to get permission to notify.&#39;, error);
+  });
+}</code></pre>
+        <h3 is-upgraded><strong>Get your device token</strong></h3>
+        <ol type="1" start="1">
+          <li>
+            If your app is still being served, refresh your app in the browser.
+            Otherwise, run <code>firebase serve</code> on the command line to
+            start serving the app from
+            <a href="http://localhost:5000" target="_blank"
+              >http://localhost:5000</a
+            >, and then open it in your browser.
+          </li>
+          <li>
+            After signing in, the notifications permission dialog should
+            appear:<br /><img
+              style="width: 480.00px"
+              src="https://codelabs.developers.google.com/codelabs/firebase-web/img/4169287ac98921d0.png"
+            />
+          </li>
+          <li>Click <strong>Allow</strong>.</li>
+          <li>
+            Open the JavaScript console of your browser. You should see the
+            following message:<br /><code
+              >Got FCM device token:
+              cWL6w:APA91bHP...4jDPL_A-wPP06GJp1OuekTaTZI5K2Tu</code
+            >
+          </li>
+          <li>
+            Copy your device token. You&#39;ll need it for the next stage of the
+            codelab.
+          </li>
+        </ol>
+        <h3 is-upgraded><strong>Send a notification to your device</strong></h3>
+        <p>Now that you have your device token, you can send a notification.</p>
+        <ol type="1" start="1">
+          <li>
+            In addition to the device token, you&#39;ll also need your Firebase
+            app&#39;s <strong>Server Key</strong>. To obtain this key, go to
+            <a
+              href="https://console.firebase.google.com/project/_/settings/cloudmessaging"
+              target="_blank"
+              ><strong
+                >Firebase Console &gt; Project Settings &gt; Cloud
+                Messaging</strong
+              ></a
+            >, then copy the <strong>Server Key</strong>.
+          </li>
+        </ol>
+        <p>
+          To send a notification, you&#39;ll need to send the following HTTP
+          request:
+        </p>
+        <pre><code>POST /fcm/send HTTP/1.1
+Host: fcm.googleapis.com
+Content-Type: application/json
+Authorization: key=YOUR_SERVER_KEY
+
+{
+  &#34;notification&#34;: {
+    &#34;title&#34;: &#34;New chat message!&#34;,
+    &#34;body&#34;: &#34;There is a new message in FriendlyChat&#34;,
+    &#34;icon&#34;: &#34;/images/profile_placeholder.png&#34;,
+    &#34;click_action&#34;: &#34;http://localhost:5000&#34;
+  },
+  &#34;to&#34;:&#34;YOUR_DEVICE_TOKEN&#34;
+}</code></pre>
+        <ol type="1" start="2">
+          <li>
+            On the command line, run the following
+            <a href="https://curl.haxx.se/" target="_blank">cURL</a> command.
+          </li>
+        </ol>
+        <aside class="warning">
+          <p>
+            Don&#39;t forget to replace <code>YOUR_SERVER_KEY</code> and
+            <code>YOUR_DEVICE_TOKEN</code> with the values of your
+            <strong>Server Key</strong> and your <strong>Device Token</strong>.
+          </p>
+        </aside>
+        <pre><code>curl -H &#34;Content-Type: application/json&#34; \
+     -H &#34;Authorization: key=YOUR_SERVER_KEY&#34; \
+     -d &#39;{
+           &#34;notification&#34;: {
+             &#34;title&#34;: &#34;New chat message!&#34;,
+             &#34;body&#34;: &#34;There is a new message in FriendlyChat&#34;,
+             &#34;icon&#34;: &#34;/images/profile_placeholder.png&#34;,
+             &#34;click_action&#34;: &#34;http://localhost:5000&#34;
+           },
+           &#34;to&#34;: &#34;YOUR_DEVICE_TOKEN&#34;
+         }&#39; \
+     https://fcm.googleapis.com/fcm/send</code></pre>
+        <aside class="special">
+          <p>
+            If you don&#39;t have cURL or if it&#39;s hard to install on your
+            machine (for instance, on Windows), feel free to use this service:
+            <a href="https://onlinecurl.com/" target="_blank">onlinecurl.com</a
+            >.
+          </p>
+          <p>
+            <strong>Beware</strong> that sharing your Server Key with a
+            third-party service may not be secure. Make sure to refresh your
+            Server Key after test/development.
+          </p>
+        </aside>
+        <p>
+          Note that the notification will only appear if the FriendlyChat app is
+          in the background. You must navigate away or display another tab for
+          the notification to be displayed. When the app is in the foreground,
+          there is a way to
+          <a
+            href="https://firebase.google.com/docs/cloud-messaging/js/receive#handle_messages_when_your_web_app_is_in_the_foreground"
+            target="_blank"
+            >catch the messages sent by FCM</a
+          >.
+        </p>
+        <p>
+          If your app is in the background, a notification should appear in your
+          browser, as in this example:
+        </p>
+        <p class="image-container">
+          <img
+            style="width: 377.78px"
+            src="https://codelabs.developers.google.com/codelabs/firebase-web/img/a2fe01ddc075e45a.png"
+          />
+        </p>
+        <aside class="special">
+          <p>
+            In a followup codelab,
+            <a
+              href="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions"
+              target="_blank"
+              ><strong>Firebase SDK for Cloud Functions</strong></a
+            >, we&#39;ll see how to automate sending notifications from the
+            backend for each new message posted in the chat app.
+          </p>
+        </aside>
+      </google-codelab-step>
+
       <google-codelab-step label="New Message Notifications" duration="10">
         <p>
           In this section you will add a Cloud Function that sends notifications
@@ -3131,45 +2695,37 @@ Project Console: https://console.firebase.google.com/project/friendlychat-1234/o
 
       <google-codelab-step label="Congratulations!" duration="0">
         <p>
-          You have used the Firebase SDK for Cloud Functions and added
-          server-side components to a chat app.
+          You&#39;ve used Firebase to build a real-time chat web application!
         </p>
         <h3 class="checklist" is-upgraded>
           <strong>What we&#39;ve covered</strong>
         </h3>
         <ul class="checklist">
-          <li>
-            Authoring Cloud Functions using the Firebase SDK for Cloud
-            Functions.
-          </li>
-          <li>
-            Trigger Cloud Functions based on Auth, Cloud Storage and Cloud
-            Firestore events.
-          </li>
-          <li>Add Firebase Cloud Messaging support to your web app.</li>
-          <li>Deployed Cloud Functions using the Firebase CLI.</li>
+          <li>Firebase Authentication</li>
+          <li>Cloud Firestore</li>
+          <li>Firebase Cloud Functions</li>
+          <li>Firebase SDK for Cloud Storage</li>
+          <li>Firebase Cloud Messaging</li>
+          <li>Firebase Hosting</li>
         </ul>
-        <h3 is-upgraded>Next Steps</h3>
-        <ul>
-          <li>
-            Learn about the
+        <h3 is-upgraded>Next steps</h3>
+        <aside class="special">
+          <p>
+            Continue on to the
             <a
-              href="https://firebase.google.com/docs/functions/firestore-events"
+              href="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/#4"
               target="_blank"
-              >other Cloud Function trigger types</a
-            >.
-          </li>
-          <li>Use Firebase and Cloud Functions with your own app.</li>
-        </ul>
-        <h3 is-upgraded><strong>Learn More</strong></h3>
-        <ul>
-          <li>
-            <a
-              href="https://firebase.google.com/docs/functions/"
-              target="_blank"
-              >firebase.google.com/docs/functions</a
+              ><strong>Cloud Functions for Firebase</strong></a
             >
-          </li>
+            codelab to learn how to use the Firebase SDK for Cloud Functions and
+            add some backend tasks to your chat app. You can start directly on
+            Step 5 of that codelab since you&#39;ve already set up your Firebase
+            project.
+          </p>
+        </aside>
+
+        <h3 is-upgraded><strong>Learn more</strong></h3>
+        <ul>
           <li>
             <a href="https://firebase.google.com" target="_blank"
               >firebase.google.com</a
@@ -3177,6 +2733,7 @@ Project Console: https://console.firebase.google.com/project/friendlychat-1234/o
           </li>
         </ul>
       </google-codelab-step>
+
     </google-codelab>
 
     <script src="https://codelabs.developers.google.com/elements/codelab-elements/native-shim.js"></script>
