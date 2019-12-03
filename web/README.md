@@ -1,5 +1,5 @@
-# Firebase Web Codelab - Start code
+# Nigthclazz Zenika Firebase - Correction code
 
-This folder contains the starting code for the [Firebase: Build a Real Time Web Chat App Codelab](https://codelabs.developers.google.com/codelabs/firebase-web/).
+This folder contains the correction code for the [Nigthclazz Zenika Firebase](https://zenika.github.io/firebase-web-101/).
 
-If you'd like to jump directly to the end and see the finished code head to the [web](../web) directory.
+If you'd like to start the codelab see the [web-start](../web-start) directory.
