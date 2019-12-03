@@ -61,7 +61,7 @@
           <li>Authenticate your users using Firebase Authentication.</li>
           <li>Deploy your web app on Firebase Hosting.</li>
           <li>Send notifications with Firebase Cloud Messaging.</li>
-          <li>Collect your web app&#39;s performance data.</li>
+          <li>Use Firebase Extensions</li>
         </ul>
         <h3 is-upgraded>What you&#39;ll need</h3>
         <ul>
@@ -129,7 +129,7 @@
               app.
             </li>
             <li>
-              📁 <strong>docs</strong>: The webpage
+              📁 <strong>docs</strong>: The codelab instructions
             </li>
           </ul>
           <p>
@@ -206,10 +206,6 @@
           <li>
             <strong>Firebase Cloud Messaging</strong> to send push notifications
             and display browser popup notifications.
-          </li>
-          <li>
-            <strong>Firebase Performance Monitoring</strong> to collect user
-            performance data for your app.
           </li>
         </ul>
         <p>
@@ -1781,25 +1777,37 @@ Project Console: https://console.firebase.google.com/project/friendlypchat-1234/
 
       <google-codelab-step label="Deploy and run the web app" duration="1">
         <p>
-          Now that you have imported and configured your project you are ready
-          to run the web app for the first time. Open a console at the
-          <code>cloud-functions-start</code> folder and run
-          <code>firebase deploy --except functions</code> this will only deploy
-          the web app to Firebase hosting:
+          To deploy the whole project (static files, functions, rules...), go back to the
+          <code>web-start</code> folder and run
+          <code>firebase deploy</code>:
         </p>
-        <pre><code>firebase deploy --except functions</code></pre>
+        <pre><code>firebase deploy</code></pre>
         <p>This is the console output you should see:</p>
-        <pre><code>i deploying database, storage, hosting
-✔  database: rules ready to deploy.
-i  storage: checking rules for compilation errors...
-✔  storage: rules file compiled successfully
-i  hosting: preparing ./ directory for upload...
-✔  hosting: ./ folder uploaded successfully
-✔ storage: rules file compiled successfully
-✔ hosting: 8 files uploaded successfully
-i starting release process (may take several minutes)...
+        <pre><code>i  deploying storage, firestore, functions, hosting
+i  storage: checking storage.rules for compilation errors...
+✔  storage: rules file storage.rules compiled successfully
+i  firestore: checking firestore.rules for compilation errors...
+✔  firestore: rules file firestore.rules compiled successfully
+i  functions: ensuring necessary APIs are enabled...
+✔  functions: all necessary APIs are enabled
+i  storage: uploading rules storage.rules...
+i  firestore: uploading rules firestore.rules...
+i  functions: preparing functions directory for uploading...
+i  functions: packaged functions (36.16 KB) for uploading
+✔  functions: functions folder uploaded successfully
+i  hosting[friendlychat-1234]: beginning deploy...
+i  hosting[friendlychat-1234]: found 7 files in ./public
+✔  hosting[friendlychat-1234]: file upload complete
+✔  storage: released rules storage.rules to firebase.storage/friendlychat-1234.appspot.com
+✔  firestore: released rules firestore.rules to cloud.firestore
+i  functions: updating Node.js 8 function addWelcomeMessages(us-central1)...
+✔  functions[addWelcomeMessages(us-central1)]: Successful update operation. 
+i  hosting[friendlychat-1234]: finalizing version...
+✔  hosting[friendlychat-1234]: version finalized
+i  hosting[friendlychat-1234]: releasing new version...
+✔  hosting[friendlychat-1234]: release complete
 
-✔ Deploy complete!
+✔  Deploy complete!
 
 Project Console: https://console.firebase.google.com/project/friendlychat-1234/overview
 Hosting URL: https://friendlychat-1234.firebaseapp.com</code></pre>
@@ -1820,39 +1828,6 @@ Hosting URL: https://friendlychat-1234.firebaseapp.com</code></pre>
             style="width: 537.95px"
             src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/eb22bdc11ce003e0.png"
           />
-        </p>
-        <p>
-          If you sign-in the app for the first time on a new browser make sure
-          you allow notifications when prompted:<br /><img
-            style="width: 523.90px"
-            src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/93ec8bf8a1fea7e1.png"
-          />
-        </p>
-        <p>
-          We&#39;ll need you to have notifications enabled at a later point.
-        </p>
-        <p>
-          If you have accidentally clicked <strong>Block</strong> you can change
-          this setting by clicking on the <strong>🔒 Secure</strong> button on
-          the left of the URL in the Chrome Omnibar and selecting
-          <strong>Notifications &gt; Always Allow on this Site</strong>:
-        </p>
-        <p class="image-container">
-          <img
-            style="width: 362.28px"
-            src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/4b309f3754532766.png"
-          />
-        </p>
-        <aside class="warning">
-          <p>
-            You don&#39;t see this? If you are in an incognito browser session
-            note that Firebase Cloud Messaging is disabled. To complete this
-            step use a regular browser session.
-          </p>
-        </aside>
-        <p>
-          Now we&#39;ll be adding some functionality using the Firebase SDK for
-          Cloud Functions.
         </p>
       </google-codelab-step>
 
@@ -2707,7 +2682,7 @@ Project Console: https://console.firebase.google.com/project/friendlychat-1234/o
         <p>
           We wan't to add a new fonctionnality for translate all messages into multiple languages and save it in the Cloud Firestore.
         </p>
-        <h3 is-upgraded><strong>Instal extensiosn</strong></h3>
+        <h3 is-upgraded><strong>Install extension</strong></h3>
         <p>Let&#39;s check the catalog of available extensions on the <a href="http://firebase.google.com/products/extensions" target="_blank">Firebase website</a>.</p>
         <p class="image-container"><img style="width: 624.00px" src="https://codelabs.developers.google.com/codelabs/firebase-extensions/img/e6bc3874cf23f34f.png"></p>
         <p>Look at that! There&#39;s an extension called &#34;Translate Text&#34;. That looks promising. </p>
@@ -2716,7 +2691,7 @@ Project Console: https://console.firebase.google.com/project/friendlychat-1234/o
         <ol type="1" start="1">
         <li>Click <a href="https://firebase.google.com/products/extensions/firestore-translate-text/" target="_blank"><strong>See details</strong></a> to view more information about this extension. Under <strong>What you can configure</strong>, the extension lets you set the dimensions you&#39;d like to resize to, and you can even set the cache header. Perfect!</li>
         <li>Click the <strong>Install in console</strong> button on the <a href="https://firebase.google.com/products/extensions/firestore-translate-text/" target="_blank">extension&#39;s details page</a>. You will be taken to a Firebase console page which lists all of your projects.</li>
-        <li>Choose yrou <strong>FriendlyChat</strong> project that you created for this codelab.</li>
+        <li>Choose your <strong>FriendlyChat</strong> project that you created for this codelab.</li>
         <li>Follow the on-screen instructions until you reach the <strong>Configure extension</strong> step.<br>The instructions will show a basic summary of the extension, as well as any resources it will create and access roles it requires.</li>
         <li>In the <strong><code>Collection path</code></strong> field, enter the following:</li>
         </ol>
