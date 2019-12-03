@@ -87,6 +87,17 @@
             how to get the code.)
           </li>
         </ul>
+        <aside class="special">
+          <p>
+            This codelab is adapted from :
+            <ul>
+              <li><a href="https://codelabs.developers.google.com/codelabs/firebase-web/">Firebase Web</a></li>
+              <li><a href="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/">Firebase Cloud Functions</a></li>
+              <li><a href="https://codelabs.developers.google.com/codelabs/firebase-extensions/">Firebase Extensions</a></li>
+            </ul>
+          </p>
+        </aside>
+
       </google-codelab-step>
 
       <google-codelab-step label="Get the sample code" duration="2">
@@ -2509,12 +2520,7 @@ Authorization: key=YOUR_SERVER_KEY
         </p>
         <aside class="special">
           <p>
-            In a followup codelab,
-            <a
-              href="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions"
-              target="_blank"
-              ><strong>Firebase SDK for Cloud Functions</strong></a
-            >, we&#39;ll see how to automate sending notifications from the
+            In a followup set, we&#39;ll see how to automate sending notifications from the
             backend for each new message posted in the chat app.
           </p>
         </aside>
@@ -2538,15 +2544,6 @@ Authorization: key=YOUR_SERVER_KEY
           device tokens from users when they open the app for the first time on
           a new browser or device. These tokens are stored in Cloud Firestore in
           the <code>fcmTokens</code> collection.
-        </p>
-        <p>
-          If you would like to learn how to get FCM device tokens on a web app
-          you can go through the
-          <a
-            href="http://codelabs.developers.google.com/codelabs/firebase-web/"
-            target="_blank"
-            >Firebase Web Codelab</a
-          >.
         </p>
         <h3 is-upgraded><strong>Send notifications</strong></h3>
         <p>
@@ -2693,6 +2690,53 @@ Project Console: https://console.firebase.google.com/project/friendlychat-1234/o
         </aside>
       </google-codelab-step>
 
+
+      <google-codelab-step label="Automatically translate text (bonus)" duration="5">
+        <p>
+          In this section you will add a firebase extensions for automatically translate all texts.
+        </p>
+        <p>
+          Using
+          <a
+            href="https://firebase.google.com/products/extensions"
+            target="_blank"
+            >Firebase Extensions</a
+          >
+          With firebase extensions, you can install pre-packaged solutions for help you
+        </p>
+        <p>
+          We wan't to add a new fonctionnality for translate all messages into multiple languages and save it in the Cloud Firestore.
+        </p>
+        <h3 is-upgraded><strong>Instal extensiosn</strong></h3>
+        <p>Let&#39;s check the catalog of available extensions on the <a href="http://firebase.google.com/products/extensions" target="_blank">Firebase website</a>.</p>
+        <p class="image-container"><img style="width: 624.00px" src="https://codelabs.developers.google.com/codelabs/firebase-extensions/img/e6bc3874cf23f34f.png"></p>
+        <p>Look at that! There&#39;s an extension called &#34;Translate Text&#34;. That looks promising. </p>
+        <p>Let&#39;s use this extension in your app!</p>
+        <h2 is-upgraded><strong>Install an extension</strong></h2>
+        <ol type="1" start="1">
+        <li>Click <a href="https://firebase.google.com/products/extensions/firestore-translate-text/" target="_blank"><strong>See details</strong></a> to view more information about this extension. Under <strong>What you can configure</strong>, the extension lets you set the dimensions you&#39;d like to resize to, and you can even set the cache header. Perfect!</li>
+        <li>Click the <strong>Install in console</strong> button on the <a href="https://firebase.google.com/products/extensions/firestore-translate-text/" target="_blank">extension&#39;s details page</a>. You will be taken to a Firebase console page which lists all of your projects.</li>
+        <li>Choose yrou <strong>FriendlyChat</strong> project that you created for this codelab.</li>
+        <li>Follow the on-screen instructions until you reach the <strong>Configure extension</strong> step.<br>The instructions will show a basic summary of the extension, as well as any resources it will create and access roles it requires.</li>
+        <li>In the <strong><code>Collection path</code></strong> field, enter the following:</li>
+        </ol>
+        <p><code>messages</code></p>
+        <ol type="1" start="6">
+        <li>In the <strong><code>Input field name</code></strong> field, enter the following:</li>
+        </ol>
+        <p><code>text</code></p>
+        <ol type="1" start="7">
+        <li>Leave the other parameters at their default values.</li>
+        <li>Click <strong>Install extension</strong>.</li>
+        <li>Wait for the installation.</li>
+        </ol>
+        <aside class="special">
+          <p>
+            This extension requires to activate the payment on the firebase account
+          </p>
+        </aside>
+      </google-codelab-step>
+
       <google-codelab-step label="Congratulations!" duration="0">
         <p>
           You&#39;ve used Firebase to build a real-time chat web application!
@@ -2708,22 +2752,6 @@ Project Console: https://console.firebase.google.com/project/friendlychat-1234/o
           <li>Firebase Cloud Messaging</li>
           <li>Firebase Hosting</li>
         </ul>
-        <h3 is-upgraded>Next steps</h3>
-        <aside class="special">
-          <p>
-            Continue on to the
-            <a
-              href="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/#4"
-              target="_blank"
-              ><strong>Cloud Functions for Firebase</strong></a
-            >
-            codelab to learn how to use the Firebase SDK for Cloud Functions and
-            add some backend tasks to your chat app. You can start directly on
-            Step 5 of that codelab since you&#39;ve already set up your Firebase
-            project.
-          </p>
-        </aside>
-
         <h3 is-upgraded><strong>Learn more</strong></h3>
         <ul>
           <li>
