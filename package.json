@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "101 Firebase workshop for web apps.",
   "scripts": {
-    "codelab": "npx serve docs"
+    "start": "npx serve docs"
   },
   "license": "MIT"
 }

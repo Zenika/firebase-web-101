@@ -1943,261 +1943,6 @@ function saveImageMessage(file) {
         </p>
       </google-codelab-step>
 
-      <google-codelab-step label="Images moderation" duration="10">
-        <p>
-          Users can upload all type of images in the chat, and it is always
-          important to moderate offensive images, especially in public social
-          platforms. In FriendlyChat the images that are being published to the
-          chat are stored into
-          <a href="https://firebase.google.com/docs/storage/" target="_blank"
-            >Google Cloud Storage</a
-          >.
-        </p>
-        <p>
-          With Cloud Functions, you can detect new image uploads using the
-          <code>functions.storage().onFinalize</code> trigger. This will run
-          every time a new file is uploaded or modified in Cloud Storage.
-        </p>
-        <p>To moderate images we&#39;ll go through the following process:</p>
-        <ol type="1" start="1">
-          <li>
-            Check if the image is flagged as Adult or Violent using the
-            <a href="https://cloud.google.com/vision/" target="_blank"
-              >Cloud Vision API</a
-            >
-          </li>
-          <li>
-            If the image has been flagged, download it on the running Functions
-            instance
-          </li>
-          <li>
-            Blur the image using
-            <a href="https://www.imagemagick.org" target="_blank"
-              >ImageMagick</a
-            >
-          </li>
-          <li>Upload the blurred image to Cloud Storage</li>
-        </ol>
-        <h3 is-upgraded>Enable the Cloud Vision API</h3>
-        <p>
-          Since we&#39;ll be using the Google Cloud Vision API in this function,
-          you must enable the API on your firebase project. Follow
-          <a
-            href="https://console.cloud.google.com/apis/api/vision.googleapis.com/overview?project=_"
-            target="_blank"
-            >this link</a
-          >, select your Firebase project and enable the API:
-        </p>
-        <p class="image-container">
-          <img
-            style="width: 310.00px"
-            src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/3abc609a72fdeedd.png"
-          />
-        </p>
-        <aside class="warning">
-          <p>
-            Note: you will have to
-            <a
-              href="https://console.cloud.google.com/billing?project=_"
-              target="_blank"
-              >enable billing</a
-            >
-            to use this API. While most of what you do in this codelab should be
-            within the free tier there is a risk you may be billed depending on
-            your usage. To avoid this, make sure you disable billing at the end
-            of this codelab.
-          </p>
-          <p>
-            If you do not feel comfortable enabling Billing, feel free to skip
-            this section and move on to New Message Notifications.
-          </p>
-        </aside>
-        <h3 is-upgraded><strong>Install dependencies</strong></h3>
-        <p>To moderate the images we&#39;ll need a few Node.js packages:</p>
-        <ul>
-          <li>
-            The Google Cloud Vision Client Library for Node.js:
-            <a
-              href="https://www.npmjs.com/package/@google-cloud/vision"
-              target="_blank"
-              >@google-cloud/vision</a
-            >
-            to run the image through the Cloud Vision API to detect
-            inappropriate images.
-          </li>
-          <li>
-            A Node.js library allowing us to run processes:
-            <a
-              href="https://www.npmjs.com/package/child-process-promise"
-              target="_blank"
-              >child-process-promise</a
-            >
-            to run ImageMagick since the ImageMagick command-line tool comes
-            pre-installed on all Functions instances.
-          </li>
-        </ul>
-        <p>
-          To install these two packages into your Cloud Functions app, run the
-          following <code>npm install --save</code> command. Make sure that you
-          do this from the <code>functions</code> directory.
-        </p>
-        <pre><code>npm install --save @google-cloud/vision@0.12.0 child-process-promise@2.2.1</code></pre>
-        <p>
-          This will install the two packages locally and add them as declared
-          dependencies in your <code>package.json</code> file.
-        </p>
-        <h3 is-upgraded><strong>Import and configure dependencies</strong></h3>
-        <p>
-          To import the two dependencies that were installed and some Node.js
-          core modules (<code>path</code>, <code>os</code> and <code>fs</code>)
-          that we&#39;ll need in this section add the following lines to the top
-          of your <code>index.js</code> file:
-        </p>
-        <h3 is-upgraded>index.js</h3>
-        <pre><code>const Vision = require(&#39;@google-cloud/vision&#39;);
-const vision = new Vision();
-const spawn = require(&#39;child-process-promise&#39;).spawn;
-
-const path = require(&#39;path&#39;);
-const os = require(&#39;os&#39;);
-const fs = require(&#39;fs&#39;);</code></pre>
-        <p>
-          Since your function will run inside a Google Cloud environment, there
-          is no need to configure the Cloud Storage and Cloud Vision libraries:
-          they will be configured automatically to use your project.
-        </p>
-        <h3 is-upgraded><strong>Detecting inappropriate images</strong></h3>
-        <p>
-          You&#39;ll be using the <code>functions.storage.onChange</code> Cloud
-          Functions trigger which runs your code as soon as a file or folder is
-          created or modified in a Cloud Storage bucket. Add the
-          <code>blurOffensiveImages</code> Function into your
-          <code>index.js</code> file:
-        </p>
-        <h3 is-upgraded>index.js</h3>
-        <pre><code>// Checks if uploaded images are flagged as Adult or Violence and if so blurs them.
-exports.blurOffensiveImages = functions.runWith({memory: &#39;2GB&#39;}).storage.object().onFinalize(
-    async (object) =&gt; {
-      const image = {
-        source: {imageUri: `gs://${object.bucket}/${object.name}`},
-      };
-
-      // Check the image content using the Cloud Vision API.
-      const batchAnnotateImagesResponse = await vision.safeSearchDetection(image);
-      const safeSearchResult = batchAnnotateImagesResponse[0].safeSearchAnnotation;
-      const Likelihood = Vision.types.Likelihood;
-      if (Likelihood[safeSearchResult.adult] &gt;= Likelihood.LIKELY ||
-          Likelihood[safeSearchResult.violence] &gt;= Likelihood.LIKELY) {
-        console.log(&#39;The image&#39;, object.name, &#39;has been detected as inappropriate.&#39;);
-        return blurImage(object.name);
-      }
-      console.log(&#39;The image&#39;, object.name, &#39;has been detected as OK.&#39;);
-    });</code></pre>
-        <p>
-          Note that we added some configuration of the Cloud Functions instance
-          that will run the function, with
-          <code>.runWith({memory: &#39;2GB&#39;})</code> we&#39;re requesting
-          that the instance gets 2GB of memory rather than the default, this
-          will help as this function is memory intensive.
-        </p>
-        <p>
-          When the function is triggered, the image is ran through the Cloud
-          Vision API to detect if it is flagged as adult or violent. If the
-          image is detected as inappropriate based on these criteria we&#39;re
-          blurring the image which is done in the
-          <code>blurImage</code> function which we&#39;ll see next.
-        </p>
-        <h3 is-upgraded><strong>Blurring the image</strong></h3>
-        <p>
-          Add the following <code>blurImage</code> function in your
-          <code>index.js</code> file:
-        </p>
-        <h3 is-upgraded>index.js</h3>
-        <pre><code>// Blurs the given image located in the given bucket using ImageMagick.
-async function blurImage(filePath) {
-  const tempLocalFile = path.join(os.tmpdir(), path.basename(filePath));
-  const messageId = filePath.split(path.sep)[1];
-  const bucket = admin.storage().bucket();
-
-  // Download file from bucket.
-  await bucket.file(filePath).download({destination: tempLocalFile});
-  console.log(&#39;Image has been downloaded to&#39;, tempLocalFile);
-  // Blur the image using ImageMagick.
-  await spawn(&#39;convert&#39;, [tempLocalFile, &#39;-channel&#39;, &#39;RGBA&#39;, &#39;-blur&#39;, &#39;0x24&#39;, tempLocalFile]);
-  console.log(&#39;Image has been blurred&#39;);
-  // Uploading the Blurred image back into the bucket.
-  await bucket.upload(tempLocalFile, {destination: filePath});
-  console.log(&#39;Blurred image has been uploaded to&#39;, filePath);
-  // Deleting the local file to free up disk space.
-  fs.unlinkSync(tempLocalFile);
-  console.log(&#39;Deleted local file.&#39;);
-  // Indicate that the message has been moderated.
-  await admin.firestore().collection(&#39;messages&#39;).doc(messageId).update({moderated: true});
-  console.log(&#39;Marked the image as moderated in the database.&#39;);
-}</code></pre>
-        <p>
-          In the above function the image binary is downloaded from Cloud
-          Storage. Then the image is blurred using ImageMagick&#39;s
-          <code>convert</code> tool and the blurred version is re-uploaded on
-          the Storage Bucket. Then we delete the file on the Cloud Functions
-          instance to free up some disk space, we do this because the same Cloud
-          Functions instance can get re-used and if files are not cleaned up it
-          could run out of disk. Finally we add a boolean to the chat message
-          indicating the image was moderated, this will trigger a refresh of the
-          message on the client.
-        </p>
-        <h3 is-upgraded><strong>Deploy the Function</strong></h3>
-        <p>
-          The Function will only be active after you&#39;ve deployed it. On the
-          command line run <code>firebase deploy --only functions</code>:
-        </p>
-        <pre><code>firebase deploy --only functions</code></pre>
-        <p>This is the console output you should see:</p>
-        <pre><code>i  deploying functions
-i  functions: ensuring necessary APIs are enabled...
-✔  functions: all necessary APIs are enabled
-i  functions: preparing functions directory for uploading...
-i  functions: packaged functions (X.XX KB) for uploading
-✔  functions: functions folder uploaded successfully
-i  starting release process (may take several minutes)...
-i  functions: updating function addWelcomeMessages...
-i  functions: creating function blurOffensiveImages...
-✔  functions[addWelcomeMessages]: Successful update operation.
-✔  functions[blurOffensiveImages]: Successful create operation.
-✔  functions: all functions deployed successfully!
-
-✔  Deploy complete!
-
-Project Console: https://console.firebase.google.com/project/friendlychat-1234/overview</code></pre>
-        <h3 is-upgraded><strong>Test the function</strong></h3>
-        <p>Once the function has deployed successfully:</p>
-        <ol type="1" start="1">
-          <li>
-            Open your app in your browser using the hosting URL (in the form of
-            <code>https://&lt;project-id&gt;.firebaseapp.com</code>).
-          </li>
-          <li>
-            Once signed-in the app upload an image:
-            <img
-              style="width: 44.00px"
-              src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/43fbd8dd2e559aca.png"
-            />
-          </li>
-          <li>
-            Choose your best offensive image to upload (or you can use this
-            <a
-              href="https://pixabay.com/zombie-flesh-eater-dead-spooky-949916/"
-              target="_blank"
-              >flesh eating Zombie</a
-            >!) and after a few moments you should see your post refresh with a
-            blurred version of the image:<br /><img
-              style="width: 432.50px"
-              src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/6a2d6c52e6ea89b.png"
-            />
-          </li>
-        </ol>
-      </google-codelab-step>
-
       <google-codelab-step label="Show notifications" duration="10">
         <p>
           We&#39;ll now add support for browser notifications. The app will
@@ -2666,7 +2411,32 @@ Project Console: https://console.firebase.google.com/project/friendlychat-1234/o
       </google-codelab-step>
 
 
-      <google-codelab-step label="Automatically translate text (bonus)" duration="5">
+      <google-codelab-step label="Congratulations!" duration="0">
+        <p>
+          You&#39;ve used Firebase to build a real-time chat web application!
+        </p>
+        <h3 class="checklist" is-upgraded>
+          <strong>What we&#39;ve covered</strong>
+        </h3>
+        <ul class="checklist">
+          <li>Firebase Hosting</li>
+          <li>Firebase Authentication</li>
+          <li>Cloud Firestore</li>
+          <li>Firebase Cloud Functions</li>
+          <li>Firebase SDK for Cloud Storage</li>
+          <li>Firebase Cloud Messaging</li>
+        </ul>
+        <h3 is-upgraded><strong>Learn more</strong></h3>
+        <ul>
+          <li>
+            <a href="https://firebase.google.com" target="_blank"
+              >firebase.google.com</a
+            >
+          </li>
+        </ul>
+      </google-codelab-step>
+
+      <google-codelab-step label="[BONUS] Automatically translate messages" duration="5">
         <p>
           In this section you will add a firebase extensions for automatically translate all texts.
         </p>
@@ -2712,30 +2482,261 @@ Project Console: https://console.firebase.google.com/project/friendlychat-1234/o
         </aside>
       </google-codelab-step>
 
-      <google-codelab-step label="Congratulations!" duration="0">
+      <google-codelab-step label="[BONUS] Build images moderation" duration="10">
         <p>
-          You&#39;ve used Firebase to build a real-time chat web application!
+          Users can upload all type of images in the chat, and it is always
+          important to moderate offensive images, especially in public social
+          platforms. In FriendlyChat the images that are being published to the
+          chat are stored into
+          <a href="https://firebase.google.com/docs/storage/" target="_blank"
+            >Google Cloud Storage</a
+          >.
         </p>
-        <h3 class="checklist" is-upgraded>
-          <strong>What we&#39;ve covered</strong>
-        </h3>
-        <ul class="checklist">
-          <li>Firebase Authentication</li>
-          <li>Cloud Firestore</li>
-          <li>Firebase Cloud Functions</li>
-          <li>Firebase SDK for Cloud Storage</li>
-          <li>Firebase Cloud Messaging</li>
-          <li>Firebase Hosting</li>
-        </ul>
-        <h3 is-upgraded><strong>Learn more</strong></h3>
-        <ul>
+        <p>
+          With Cloud Functions, you can detect new image uploads using the
+          <code>functions.storage().onFinalize</code> trigger. This will run
+          every time a new file is uploaded or modified in Cloud Storage.
+        </p>
+        <p>To moderate images we&#39;ll go through the following process:</p>
+        <ol type="1" start="1">
           <li>
-            <a href="https://firebase.google.com" target="_blank"
-              >firebase.google.com</a
+            Check if the image is flagged as Adult or Violent using the
+            <a href="https://cloud.google.com/vision/" target="_blank"
+              >Cloud Vision API</a
             >
           </li>
+          <li>
+            If the image has been flagged, download it on the running Functions
+            instance
+          </li>
+          <li>
+            Blur the image using
+            <a href="https://www.imagemagick.org" target="_blank"
+              >ImageMagick</a
+            >
+          </li>
+          <li>Upload the blurred image to Cloud Storage</li>
+        </ol>
+        <h3 is-upgraded>Enable the Cloud Vision API</h3>
+        <p>
+          Since we&#39;ll be using the Google Cloud Vision API in this function,
+          you must enable the API on your firebase project. Follow
+          <a
+            href="https://console.cloud.google.com/apis/api/vision.googleapis.com/overview?project=_"
+            target="_blank"
+            >this link</a
+          >, select your Firebase project and enable the API:
+        </p>
+        <p class="image-container">
+          <img
+            style="width: 310.00px"
+            src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/3abc609a72fdeedd.png"
+          />
+        </p>
+        <aside class="warning">
+          <p>
+            Note: you will have to
+            <a
+              href="https://console.cloud.google.com/billing?project=_"
+              target="_blank"
+              >enable billing</a
+            >
+            to use this API. While most of what you do in this codelab should be
+            within the free tier there is a risk you may be billed depending on
+            your usage. To avoid this, make sure you disable billing at the end
+            of this codelab.
+          </p>
+          <p>
+            If you do not feel comfortable enabling Billing, feel free to skip
+            this section and move on to New Message Notifications.
+          </p>
+        </aside>
+        <h3 is-upgraded><strong>Install dependencies</strong></h3>
+        <p>To moderate the images we&#39;ll need a few Node.js packages:</p>
+        <ul>
+          <li>
+            The Google Cloud Vision Client Library for Node.js:
+            <a
+              href="https://www.npmjs.com/package/@google-cloud/vision"
+              target="_blank"
+              >@google-cloud/vision</a
+            >
+            to run the image through the Cloud Vision API to detect
+            inappropriate images.
+          </li>
+          <li>
+            A Node.js library allowing us to run processes:
+            <a
+              href="https://www.npmjs.com/package/child-process-promise"
+              target="_blank"
+              >child-process-promise</a
+            >
+            to run ImageMagick since the ImageMagick command-line tool comes
+            pre-installed on all Functions instances.
+          </li>
         </ul>
+        <p>
+          To install these two packages into your Cloud Functions app, run the
+          following <code>npm install --save</code> command. Make sure that you
+          do this from the <code>functions</code> directory.
+        </p>
+        <pre><code>npm install --save @google-cloud/vision@0.12.0 child-process-promise@2.2.1</code></pre>
+        <p>
+          This will install the two packages locally and add them as declared
+          dependencies in your <code>package.json</code> file.
+        </p>
+        <h3 is-upgraded><strong>Import and configure dependencies</strong></h3>
+        <p>
+          To import the two dependencies that were installed and some Node.js
+          core modules (<code>path</code>, <code>os</code> and <code>fs</code>)
+          that we&#39;ll need in this section add the following lines to the top
+          of your <code>index.js</code> file:
+        </p>
+        <h3 is-upgraded>index.js</h3>
+        <pre><code>const Vision = require(&#39;@google-cloud/vision&#39;);
+const vision = new Vision();
+const spawn = require(&#39;child-process-promise&#39;).spawn;
+
+const path = require(&#39;path&#39;);
+const os = require(&#39;os&#39;);
+const fs = require(&#39;fs&#39;);</code></pre>
+        <p>
+          Since your function will run inside a Google Cloud environment, there
+          is no need to configure the Cloud Storage and Cloud Vision libraries:
+          they will be configured automatically to use your project.
+        </p>
+        <h3 is-upgraded><strong>Detecting inappropriate images</strong></h3>
+        <p>
+          You&#39;ll be using the <code>functions.storage.onChange</code> Cloud
+          Functions trigger which runs your code as soon as a file or folder is
+          created or modified in a Cloud Storage bucket. Add the
+          <code>blurOffensiveImages</code> Function into your
+          <code>index.js</code> file:
+        </p>
+        <h3 is-upgraded>index.js</h3>
+        <pre><code>// Checks if uploaded images are flagged as Adult or Violence and if so blurs them.
+exports.blurOffensiveImages = functions.runWith({memory: &#39;2GB&#39;}).storage.object().onFinalize(
+    async (object) =&gt; {
+      const image = {
+        source: {imageUri: `gs://${object.bucket}/${object.name}`},
+      };
+
+      // Check the image content using the Cloud Vision API.
+      const batchAnnotateImagesResponse = await vision.safeSearchDetection(image);
+      const safeSearchResult = batchAnnotateImagesResponse[0].safeSearchAnnotation;
+      const Likelihood = Vision.types.Likelihood;
+      if (Likelihood[safeSearchResult.adult] &gt;= Likelihood.LIKELY ||
+          Likelihood[safeSearchResult.violence] &gt;= Likelihood.LIKELY) {
+        console.log(&#39;The image&#39;, object.name, &#39;has been detected as inappropriate.&#39;);
+        return blurImage(object.name);
+      }
+      console.log(&#39;The image&#39;, object.name, &#39;has been detected as OK.&#39;);
+    });</code></pre>
+        <p>
+          Note that we added some configuration of the Cloud Functions instance
+          that will run the function, with
+          <code>.runWith({memory: &#39;2GB&#39;})</code> we&#39;re requesting
+          that the instance gets 2GB of memory rather than the default, this
+          will help as this function is memory intensive.
+        </p>
+        <p>
+          When the function is triggered, the image is ran through the Cloud
+          Vision API to detect if it is flagged as adult or violent. If the
+          image is detected as inappropriate based on these criteria we&#39;re
+          blurring the image which is done in the
+          <code>blurImage</code> function which we&#39;ll see next.
+        </p>
+        <h3 is-upgraded><strong>Blurring the image</strong></h3>
+        <p>
+          Add the following <code>blurImage</code> function in your
+          <code>index.js</code> file:
+        </p>
+        <h3 is-upgraded>index.js</h3>
+        <pre><code>// Blurs the given image located in the given bucket using ImageMagick.
+async function blurImage(filePath) {
+  const tempLocalFile = path.join(os.tmpdir(), path.basename(filePath));
+  const messageId = filePath.split(path.sep)[1];
+  const bucket = admin.storage().bucket();
+
+  // Download file from bucket.
+  await bucket.file(filePath).download({destination: tempLocalFile});
+  console.log(&#39;Image has been downloaded to&#39;, tempLocalFile);
+  // Blur the image using ImageMagick.
+  await spawn(&#39;convert&#39;, [tempLocalFile, &#39;-channel&#39;, &#39;RGBA&#39;, &#39;-blur&#39;, &#39;0x24&#39;, tempLocalFile]);
+  console.log(&#39;Image has been blurred&#39;);
+  // Uploading the Blurred image back into the bucket.
+  await bucket.upload(tempLocalFile, {destination: filePath});
+  console.log(&#39;Blurred image has been uploaded to&#39;, filePath);
+  // Deleting the local file to free up disk space.
+  fs.unlinkSync(tempLocalFile);
+  console.log(&#39;Deleted local file.&#39;);
+  // Indicate that the message has been moderated.
+  await admin.firestore().collection(&#39;messages&#39;).doc(messageId).update({moderated: true});
+  console.log(&#39;Marked the image as moderated in the database.&#39;);
+}</code></pre>
+        <p>
+          In the above function the image binary is downloaded from Cloud
+          Storage. Then the image is blurred using ImageMagick&#39;s
+          <code>convert</code> tool and the blurred version is re-uploaded on
+          the Storage Bucket. Then we delete the file on the Cloud Functions
+          instance to free up some disk space, we do this because the same Cloud
+          Functions instance can get re-used and if files are not cleaned up it
+          could run out of disk. Finally we add a boolean to the chat message
+          indicating the image was moderated, this will trigger a refresh of the
+          message on the client.
+        </p>
+        <h3 is-upgraded><strong>Deploy the Function</strong></h3>
+        <p>
+          The Function will only be active after you&#39;ve deployed it. On the
+          command line run <code>firebase deploy --only functions</code>:
+        </p>
+        <pre><code>firebase deploy --only functions</code></pre>
+        <p>This is the console output you should see:</p>
+        <pre><code>i  deploying functions
+i  functions: ensuring necessary APIs are enabled...
+✔  functions: all necessary APIs are enabled
+i  functions: preparing functions directory for uploading...
+i  functions: packaged functions (X.XX KB) for uploading
+✔  functions: functions folder uploaded successfully
+i  starting release process (may take several minutes)...
+i  functions: updating function addWelcomeMessages...
+i  functions: creating function blurOffensiveImages...
+✔  functions[addWelcomeMessages]: Successful update operation.
+✔  functions[blurOffensiveImages]: Successful create operation.
+✔  functions: all functions deployed successfully!
+
+✔  Deploy complete!
+
+Project Console: https://console.firebase.google.com/project/friendlychat-1234/overview</code></pre>
+        <h3 is-upgraded><strong>Test the function</strong></h3>
+        <p>Once the function has deployed successfully:</p>
+        <ol type="1" start="1">
+          <li>
+            Open your app in your browser using the hosting URL (in the form of
+            <code>https://&lt;project-id&gt;.firebaseapp.com</code>).
+          </li>
+          <li>
+            Once signed-in the app upload an image:
+            <img
+              style="width: 44.00px"
+              src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/43fbd8dd2e559aca.png"
+            />
+          </li>
+          <li>
+            Choose your best offensive image to upload (or you can use this
+            <a
+              href="https://pixabay.com/zombie-flesh-eater-dead-spooky-949916/"
+              target="_blank"
+              >flesh eating Zombie</a
+            >!) and after a few moments you should see your post refresh with a
+            blurred version of the image:<br /><img
+              style="width: 432.50px"
+              src="https://codelabs.developers.google.com/codelabs/firebase-cloud-functions/img/6a2d6c52e6ea89b.png"
+            />
+          </li>
+        </ol>
       </google-codelab-step>
+
 
     </google-codelab>
 
